@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lojão da Economia — Painel da Gestão | Hiellen Lima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --azul:#1B4FA0;
+    --azul-escuro:#103371;
+    --azul-claro:#3A6FC9;
+    --creme:#F6E6D8;
+    --creme-claro:#FBF3EA;
+    --coracao:#E94C5A;
+    --verde:#16A34A;
+    --verde-claro:#DCFCE7;
+    --amarelo:#F59E0B;
+    --vermelho:#DC2626;
+    --vermelho-claro:#FEE2E2;
+    --cinza-bg:#F4F6FB;
+    --cinza-card:#FFFFFF;
+    --cinza-borda:#E5E9F2;
+    --cinza-texto:#1E293B;
+    --cinza-mute:#64748B;
+    --cinza-suave:#94A3B8;
+    --sombra:0 1px 2px rgba(15,23,42,.04),0 4px 14px rgba(15,23,42,.06);
+    --sombra-forte:0 8px 32px rgba(15,23,42,.12);
+    --raio:14px;
+    --raio-sm:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cinza-bg);
+    color:var(--cinza-texto);
+    font-size:14px;
+    line-height:1.5;
+    overflow:hidden;
+  }
+  .app{display:flex;height:100vh}
+
+  /* ============ SIDEBAR ============ */
+  aside.sidebar{
+    width:248px;
+    background:linear-gradient(180deg,var(--azul-escuro) 0%,var(--azul) 100%);
+    color:#fff;
+    display:flex;flex-direction:column;
+    flex-shrink:0;
+    overflow-y:auto;
+  }
+  .sidebar::-webkit-scrollbar{width:6px}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:6px}
+
+  .brand{
+    padding:22px 20px 18px;
+    display:flex;align-items:center;gap:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .brand-logo{
+    width:44px;height:44px;border-radius:50%;
+    background:var(--creme);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
+  }
+  .brand-text{font-family:'Poppins',sans-serif;}
+  .brand-text h1{font-size:16px;font-weight:800;letter-spacing:.3px;line-height:1.1}
+  .brand-text p{font-size:11px;opacity:.7;font-weight:500;margin-top:2px}
+
+  .nav-section{padding:14px 14px 6px;}
+  .nav-label{
+    font-size:10px;font-weight:700;text-transform:uppercase;
+    opacity:.5;letter-spacing:1.2px;padding:6px 12px 8px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:10px 12px;margin-bottom:2px;
+    border-radius:10px;
+    cursor:pointer;font-weight:500;font-size:13.5px;
+    color:rgba(255,255,255,.78);
+    transition:all .15s;
+  }
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+  .nav-item.active{
+    background:rgba(255,255,255,.14);
+    color:#fff;font-weight:600;
+    box-shadow:inset 3px 0 0 var(--creme);
+  }
+  .nav-item .ico{font-size:17px;width:20px;text-align:center}
+  .nav-badge{
+    margin-left:auto;
+    background:var(--coracao);
+    color:#fff;font-size:10px;font-weight:700;
+    padding:2px 7px;border-radius:10px;
+  }
+
+  .user-card{
+    margin:auto 14px 16px;
+    padding:12px;
+    background:rgba(0,0,0,.18);
+    border-radius:12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(135deg,var(--creme),#E8D0B8);
+    color:var(--azul-escuro);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;flex-shrink:0;
+  }
+  .user-info{font-size:12px;line-height:1.3}
+  .user-info strong{display:block;color:#fff;font-size:13px;font-weight:600}
+  .user-info span{color:rgba(255,255,255,.55)}
+
+  /* ============ MAIN ============ */
+  main.content{
+    flex:1;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  header.topbar{
+    height:68px;
+    background:#fff;
+    border-bottom:1px solid var(--cinza-borda);
+    display:flex;align-items:center;
+    padding:0 28px;gap:20px;
+    flex-shrink:0;
+  }
+  .page-title{flex:1}
+  .page-title h2{
+    font-family:'Poppins',sans-serif;
+    font-size:20px;font-weight:700;color:var(--cinza-texto);
+    line-height:1.2;
+  }
+  .page-title p{font-size:12.5px;color:var(--cinza-mute);margin-top:2px}
+  .city-today{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,var(--azul) 0%,var(--azul-claro) 100%);
+    color:#fff;padding:10px 16px;border-radius:12px;
+    box-shadow:0 4px 14px rgba(27,79,160,.3);
+  }
+  .city-today .pulse{
+    width:10px;height:10px;border-radius:50%;
+    background:#22D67B;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,214,123,.7)}50%{box-shadow:0 0 0 8px rgba(34,214,123,0)}}
+  .city-today .label{font-size:10px;opacity:.85;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+  .city-today .name{font-weight:700;font-size:15px;font-family:'Poppins'}
+  .topbar-actions{display:flex;align-items:center;gap:10px}
+  .icon-btn{
+    width:40px;height:40px;border-radius:10px;
+    border:1px solid var(--cinza-borda);
+    background:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:var(--cinza-mute);
+    position:relative;
+    transition:all .15s;
+  }
+  .icon-btn:hover{border-color:var(--azul);color:var(--azul)}
+  .icon-btn .dot{
+    position:absolute;top:8px;right:8px;
+    width:8px;height:8px;border-radius:50%;
+    background:var(--coracao);
+    border:2px solid #fff;
+  }
+
+  .scroll-area{
+    flex:1;overflow-y:auto;
+    padding:24px 28px;
+    background:var(--cinza-bg);
+  }
+  .scroll-area::-webkit-scrollbar{width:8px}
+  .scroll-area::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:8px}
+
+  .page{display:none}
+  .page.active{display:block;animation:fade .25s}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ============ CARDS / KPIs ============ */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:16px;
+    margin-bottom:22px;
+  }
+  .kpi{
+    background:var(--cinza-card);
+    border-radius:var(--raio);
+    padding:18px;
+    box-shadow:var(--sombra);
+    position:relative;overflow:hidden;
+    border:1px solid var(--cinza-borda);
+  }
+  .kpi::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--azul);
+  }
+  .kpi.green::before{background:var(--verde)}
+  .kpi.red::before{background:var(--coracao)}
+  .kpi.gold::before{background:var(--amarelo)}
+  .kpi.purple::before{background:#8B5CF6}
+  .kpi-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin-bottom:10px;
+  }
+  .kpi-label{font-size:12px;color:var(--cinza-mute);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .kpi-icon{
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(27,79,160,.1);color:var(--azul);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;
+  }
+  .kpi.green .kpi-icon{background:rgba(22,163,74,.1);color:var(--verde)}
+  .kpi.red .kpi-icon{background:rgba(233,76,90,.1);color:var(--coracao)}
+  .kpi.gold .kpi-icon{background:rgba(245,158,11,.12);color:var(--amarelo)}
+  .kpi.purple .kpi-icon{background:rgba(139,92,246,.12);color:#8B5CF6}
+  .kpi-value{font-family:'Poppins',sans-serif;font-size:24px;font-weight:700;color:var(--cinza-texto);line-height:1.1}
+  .kpi-foot{
+    margin-top:8px;font-size:12px;color:var(--cinza-mute);
+    display:flex;align-items:center;gap:6px;
+  }
+  .trend-up{color:var(--verde);font-weight:600}
+  .trend-down{color:var(--coracao);font-weight:600}
+
+  /* ============ PANELS ============ */
+  .panel{
+    background:var(--cinza-card);
+    border:1px solid var(--cinza-borda);
+    border-radius:var(--raio);
+    padding:20px;
+    box-shadow:var(--sombra);
+    margin-bottom:18px;
+  }
+  .panel-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:16px;
+  }
+  .panel-title{
+    font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel-title .ico{font-size:18px;color:var(--azul)}
+  .panel-sub{font-size:12px;color:var(--cinza-mute);margin-top:2px}
+  .panel-actions{display:flex;gap:8px}
+
+  .row-2{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+  .row-equal{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px}
+  @media (max-width:1100px){.row-2,.row-equal,.row-3{grid-template-columns:1fr}}
+
+  /* ============ TABLES ============ */
+  table.tbl{width:100%;border-collapse:collapse}
+  table.tbl th{
+    text-align:left;padding:10px 12px;
+    font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--cinza-mute);font-weight:700;
+    border-bottom:1px solid var(--cinza-borda);
+    background:#FAFBFE;
+  }
+  table.tbl td{
+    padding:12px;font-size:13px;
+    border-bottom:1px solid var(--cinza-borda);
+  }
+  table.tbl tr:hover td{background:#FAFBFE}
+  .badge{
+    display:inline-block;padding:3px 9px;border-radius:20px;
+    font-size:11px;font-weight:600;
+  }
+  .badge.b-green{background:var(--verde-claro);color:#166534}
+  .badge.b-red{background:var(--vermelho-claro);color:#991B1B}
+  .badge.b-yellow{background:#FEF3C7;color:#92400E}
+  .badge.b-blue{background:#DBEAFE;color:#1E40AF}
+  .badge.b-gray{background:#F1F5F9;color:#475569}
+  .badge.b-purple{background:#EDE9FE;color:#6D28D9}
+
+  /* ============ BUTTONS ============ */
+  .btn{
+    border:none;padding:9px 16px;border-radius:10px;
+    font-weight:600;font-size:13px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;
+    transition:all .15s;font-family:inherit;
+  }
+  .btn-primary{background:var(--azul);color:#fff}
+  .btn-primary:hover{background:var(--azul-escuro)}
+  .btn-ghost{background:transparent;color:var(--cinza-mute);border:1px solid var(--cinza-borda)}
+  .btn-ghost:hover{border-color:var(--azul);color:var(--azul)}
+  .btn-success{background:var(--verde);color:#fff}
+  .btn-success:hover{background:#15803D}
+  .btn-danger{background:var(--coracao);color:#fff}
+  .btn-warn{background:var(--amarelo);color:#fff}
+  .btn-sm{padding:6px 10px;font-size:12px}
+
+  /* ============ FORMS ============ */
+  .form-grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+  .form-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .form-grid.cols-1{grid-template-columns:1fr}
+  @media(max-width:700px){.form-grid,.form-grid.cols-3{grid-template-columns:1fr}}
+  .field label{
+    display:block;font-size:12px;font-weight:600;
+    color:var(--cinza-mute);margin-bottom:5px;
+  }
+  .field input,.field select,.field textarea{
+    width:100%;padding:9px 12px;
+    border:1px solid var(--cinza-borda);
+    border-radius:8px;
+    font-family:inherit;font-size:13px;
+    background:#FAFBFE;color:var(--cinza-texto);
+    transition:all .15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;border-color:var(--azul);background:#fff;
+    box-shadow:0 0 0 3px rgba(27,79,160,.08);
+  }
+  .field textarea{resize:vertical;min-height:80px}
+
+  /* ============ CHARTS ============ */
+  .chart-wrap{position:relative;height:280px}
+  .chart-wrap.lg{height:340px}
+  .chart-wrap.sm{height:200px}
+
+  /* ============ HEAT / RANKING ============ */
+  .city-rank{
+    display:grid;grid-template-columns:30px 1fr auto auto;
+    gap:14px;align-items:center;
+    padding:11px 4px;
+    border-bottom:1px solid var(--cinza-borda);
+  }
+  .city-rank:last-child{border-bottom:none}
+  .rank-num{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--cinza-bg);color:var(--cinza-mute);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:12px;
+  }
+  .city-rank.gold .rank-num{background:#FFE9A8;color:#92400E}
+  .city-rank.silver .rank-num{background:#E5E7EB;color:#374151}
+  .city-rank.bronze .rank-num{background:#FED7AA;color:#9A3412}
+  .city-rank .name{font-weight:600;font-size:13.5px}
+  .city-rank .meta{font-size:11.5px;color:var(--cinza-mute)}
+  .city-rank .val{font-weight:700;font-size:13.5px;color:var(--azul)}
+  .progress{
+    width:100px;height:6px;background:var(--cinza-bg);border-radius:6px;overflow:hidden;
+  }
+  .progress .fill{height:100%;background:linear-gradient(90deg,var(--azul),var(--azul-claro));border-radius:6px}
+
+  /* ============ CALENDARIO DE ROTA ============ */
+  .route-week{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:10px;
+  }
+  .route-day{
+    background:#FAFBFE;border:1px solid var(--cinza-borda);
+    border-radius:12px;padding:14px;
+    cursor:pointer;transition:all .15s;
+    position:relative;
+  }
+  .route-day:hover{border-color:var(--azul);background:#fff;transform:translateY(-2px);box-shadow:var(--sombra)}
+  .route-day.today{
+    background:linear-gradient(135deg,var(--azul) 0%,var(--azul-claro) 100%);
+    color:#fff;border:none;
+    box-shadow:0 6px 20px rgba(27,79,160,.35);
+  }
+  .route-day.today .day-city,.route-day.today .day-name{color:#fff}
+  .route-day .day-name{font-size:11px;text-transform:uppercase;font-weight:600;color:var(--cinza-mute);letter-spacing:1px}
+  .route-day .day-num{font-family:'Poppins';font-size:24px;font-weight:700;margin:4px 0}
+  .route-day .day-city{font-size:12px;color:var(--cinza-mute);font-weight:600;line-height:1.3}
+  .route-day .day-meta{font-size:10.5px;opacity:.7;margin-top:3px}
+
+  /* ============ HEATMAP CIDADES ============ */
+  .heat-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;
+  }
+  .heat-cell{
+    padding:10px;border-radius:8px;
+    color:#fff;text-align:center;
+    font-size:11.5px;font-weight:600;
+    cursor:pointer;
+    transition:transform .15s;
+  }
+  .heat-cell:hover{transform:scale(1.05)}
+  .heat-cell .h-name{font-size:12.5px;margin-bottom:2px}
+  .heat-cell .h-val{font-size:11px;opacity:.85}
+
+  /* ============ PDV ============ */
+  .pdv-layout{display:grid;grid-template-columns:1fr 380px;gap:18px}
+  @media(max-width:1000px){.pdv-layout{grid-template-columns:1fr}}
+  .prod-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px;
+  }
+  .prod-card{
+    background:#fff;border:1px solid var(--cinza-borda);
+    border-radius:12px;padding:12px;
+    text-align:center;cursor:pointer;
+    transition:all .15s;
+  }
+  .prod-card:hover{border-color:var(--azul);transform:translateY(-3px);box-shadow:var(--sombra)}
+  .prod-img{
+    height:60px;background:var(--cinza-bg);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;margin-bottom:8px;
+  }
+  .prod-name{font-size:11.5px;font-weight:600;line-height:1.25;height:30px;overflow:hidden}
+  .prod-price{
+    font-family:'Poppins';font-size:13px;font-weight:700;
+    color:var(--azul);margin-top:4px;
+  }
+  .prod-stock{font-size:10px;color:var(--cinza-mute);margin-top:2px}
+  .prod-card.low{border-color:var(--amarelo)}
+  .prod-card.out{opacity:.5;pointer-events:none}
+
+  .cart-box{
+    background:#fff;border:1px solid var(--cinza-borda);
+    border-radius:var(--raio);box-shadow:var(--sombra);
+    display:flex;flex-direction:column;height:fit-content;
+    position:sticky;top:0;
+  }
+  .cart-head{
+    padding:16px;border-bottom:1px solid var(--cinza-borda);
+    background:linear-gradient(135deg,var(--azul),var(--azul-claro));
+    color:#fff;border-radius:var(--raio) var(--raio) 0 0;
+  }
+  .cart-head h3{font-family:'Poppins';font-size:15px;font-weight:700}
+  .cart-head p{font-size:11px;opacity:.85}
+  .cart-items{
+    max-height:280px;overflow-y:auto;padding:8px;
+  }
+  .cart-empty{padding:30px;text-align:center;color:var(--cinza-mute);font-size:12.5px}
+  .cart-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px;border-bottom:1px dashed var(--cinza-borda);
+  }
+  .cart-item:last-child{border-bottom:none}
+  .ci-info{flex:1;font-size:12.5px}
+  .ci-info strong{display:block;font-weight:600}
+  .ci-info span{color:var(--cinza-mute);font-size:11px}
+  .ci-qty{display:flex;align-items:center;gap:6px}
+  .ci-qty button{
+    width:24px;height:24px;border-radius:6px;
+    border:1px solid var(--cinza-borda);background:#fff;
+    cursor:pointer;font-weight:700;
+  }
+  .ci-price{font-weight:700;color:var(--azul);min-width:60px;text-align:right;font-size:13px}
+  .cart-foot{padding:16px;border-top:1px solid var(--cinza-borda);background:#FAFBFE;border-radius:0 0 var(--raio) var(--raio)}
+  .cart-total{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:12px;
+  }
+  .cart-total .lbl{font-size:13px;color:var(--cinza-mute);font-weight:600}
+  .cart-total .val{font-family:'Poppins';font-size:24px;font-weight:800;color:var(--azul)}
+  .pay-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+  .pay-btn{
+    padding:10px;border-radius:8px;
+    border:2px solid var(--cinza-borda);background:#fff;
+    font-size:11px;font-weight:600;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  .pay-btn .ico{font-size:16px}
+  .pay-btn.active{border-color:var(--azul);background:#EFF4FB;color:var(--azul)}
+
+  /* ============ MISC ============ */
+  .pill{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 10px;border-radius:20px;
+    background:#EFF4FB;color:var(--azul);
+    font-size:11px;font-weight:600;
+  }
+  .alert-box{
+    background:#FEF9C3;border:1px solid #FDE68A;
+    border-left:4px solid var(--amarelo);
+    padding:12px 14px;border-radius:8px;
+    font-size:12.5px;color:#854D0E;
+    margin-bottom:14px;
+    display:flex;gap:10px;align-items:flex-start;
+  }
+  .alert-box.danger{background:var(--vermelho-claro);border-color:#FCA5A5;border-left-color:var(--vermelho);color:#7F1D1D}
+  .alert-box.success{background:var(--verde-claro);border-color:#86EFAC;border-left-color:var(--verde);color:#14532D}
+  .alert-box.info{background:#DBEAFE;border-color:#93C5FD;border-left-color:var(--azul);color:#1E3A8A}
+
+  /* ============ MODAL ============ */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(15,23,42,.6);
+    display:none;align-items:center;justify-content:center;
+    z-index:100;backdrop-filter:blur(3px);
+  }
+  .modal-bg.show{display:flex}
+  .modal{
+    background:#fff;border-radius:var(--raio);
+    width:95%;max-width:560px;max-height:90vh;overflow-y:auto;
+    box-shadow:var(--sombra-forte);
+  }
+  .modal-head{
+    padding:18px 22px;border-bottom:1px solid var(--cinza-borda);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .modal-head h3{font-family:'Poppins';font-size:16px;font-weight:700}
+  .modal-body{padding:22px}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--cinza-borda);display:flex;justify-content:flex-end;gap:8px;background:#FAFBFE;border-radius:0 0 var(--raio) var(--raio)}
+  .close-x{
+    background:none;border:none;font-size:20px;cursor:pointer;
+    color:var(--cinza-mute);width:32px;height:32px;border-radius:8px;
+  }
+  .close-x:hover{background:var(--cinza-bg);color:var(--cinza-texto)}
+
+  /* ============ DIARIO BORDO ============ */
+  .diary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .diary-card{
+    background:#fff;border:1px solid var(--cinza-borda);
+    border-radius:12px;padding:14px;
+    border-left:4px solid var(--azul);
+  }
+  .diary-card.problem{border-left-color:var(--coracao)}
+  .diary-card.win{border-left-color:var(--verde)}
+  .diary-card.note{border-left-color:var(--amarelo)}
+  .diary-head{display:flex;justify-content:space-between;font-size:12px;color:var(--cinza-mute);margin-bottom:8px}
+  .diary-body{font-size:13px;line-height:1.5}
+
+  /* ============ FIDELIDADE / WHATSAPP ============ */
+  .wa-btn{
+    background:#25D366;color:#fff;
+    padding:8px 14px;border-radius:8px;
+    border:none;cursor:pointer;font-weight:600;font-size:12px;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .wa-btn:hover{background:#1DA851}
+
+  /* ============ TERMOMETRO DO DIA ============ */
+  .therm-box{
+    background:linear-gradient(135deg,#fff 0%,#F8FAFC 100%);
+    border:1px solid var(--cinza-borda);border-radius:var(--raio);
+    padding:18px;
+  }
+  .therm-bar{
+    position:relative;height:18px;background:linear-gradient(90deg,var(--coracao) 0%,var(--amarelo) 50%,var(--verde) 100%);
+    border-radius:20px;margin:14px 0 8px;
+  }
+  .therm-marker{
+    position:absolute;top:-8px;width:4px;height:34px;
+    background:var(--azul-escuro);border-radius:2px;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+  }
+  .therm-labels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--cinza-mute);font-weight:600}
+
+  /* ============ TABS ============ */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--cinza-borda);margin-bottom:18px;flex-wrap:wrap}
+  .tab{
+    padding:9px 16px;font-size:13px;font-weight:600;
+    color:var(--cinza-mute);cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:all .15s;
+  }
+  .tab:hover{color:var(--azul)}
+  .tab.active{color:var(--azul);border-bottom-color:var(--azul)}
+  .tab-content{display:none}
+  .tab-content.active{display:block;animation:fade .25s}
+
+  /* truck */
+  .truck-card{
+    background:linear-gradient(135deg,var(--azul-escuro),var(--azul));
+    color:#fff;border-radius:var(--raio);
+    padding:22px;margin-bottom:18px;
+    position:relative;overflow:hidden;
+  }
+  .truck-card::after{
+    content:'🚚';position:absolute;right:-10px;bottom:-30px;font-size:160px;opacity:.12;
+  }
+  .truck-card h3{font-family:'Poppins';font-size:18px;margin-bottom:6px}
+  .truck-stats{display:flex;gap:30px;margin-top:14px;flex-wrap:wrap}
+  .truck-stat .lbl{font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:1px}
+  .truck-stat .val{font-family:'Poppins';font-size:20px;font-weight:700;margin-top:2px}
+
+  /* toast */
+  .toast{
+    position:fixed;bottom:24px;right:24px;
+    background:var(--azul-escuro);color:#fff;
+    padding:12px 18px;border-radius:10px;
+    box-shadow:var(--sombra-forte);
+    transform:translateY(100px);opacity:0;
+    transition:all .25s;z-index:200;
+    font-size:13px;font-weight:600;
+    display:flex;align-items:center;gap:10px;
+  }
+  .toast.show{transform:none;opacity:1}
+  .toast.success{background:var(--verde)}
+  .toast.error{background:var(--coracao)}
+
+  /* SCROLL helper */
+  .scroll-x{overflow-x:auto}
+  .scroll-x table{min-width:600px}
+
+  /* small */
+  .text-mute{color:var(--cinza-mute)}
+  .text-right{text-align:right}
+  .text-center{text-align:center}
+  .mb-12{margin-bottom:12px}.mt-12{margin-top:12px}
+  .flex{display:flex}.gap-8{gap:8px}.gap-12{gap:12px}.flex-1{flex:1}.items-center{align-items:center}.justify-between{justify-content:space-between}
+
+  /* Settings */
+  .setting-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 0;border-bottom:1px solid var(--cinza-borda);
+  }
+  .setting-row:last-child{border-bottom:none}
+  .setting-info strong{display:block;font-size:13.5px;font-weight:600}
+  .setting-info span{font-size:12px;color:var(--cinza-mute)}
+
+  /* divisor */
+  .divider{height:1px;background:var(--cinza-borda);margin:14px 0}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">📦</div>
+      <div class="brand-text">
+        <h1>Lojão da Economia</h1>
+        <p>Painel da Gestão</p>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Operação</div>
+      <div class="nav-item active" data-page="dashboard"><span class="ico">📊</span> Visão Geral</div>
+      <div class="nav-item" data-page="pdv"><span class="ico">🛒</span> PDV — Caixa do Dia</div>
+      <div class="nav-item" data-page="rota"><span class="ico">🗺️</span> Rota & Calendário</div>
+      <div class="nav-item" data-page="cidades"><span class="ico">🏙️</span> Cidades & Performance</div>
+      <div class="nav-item" data-page="diario"><span class="ico">📓</span> Diário de Bordo</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Comercial</div>
+      <div class="nav-item" data-page="vendas"><span class="ico">💰</span> Vendas</div>
+      <div class="nav-item" data-page="produtos"><span class="ico">🏷️</span> Produtos</div>
+      <div class="nav-item" data-page="estoque"><span class="ico">📦</span> Estoque <span class="nav-badge" id="badgeEstoque">3</span></div>
+      <div class="nav-item" data-page="clientes"><span class="ico">❤️</span> Clientes & Fidelidade</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Financeiro</div>
+      <div class="nav-item" data-page="financeiro"><span class="ico">📈</span> Financeiro / DRE</div>
+      <div class="nav-item" data-page="despesas"><span class="ico">💸</span> Despesas</div>
+      <div class="nav-item" data-page="metas"><span class="ico">🎯</span> Metas</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Estrutura</div>
+      <div class="nav-item" data-page="equipe"><span class="ico">👥</span> Equipe</div>
+      <div class="nav-item" data-page="caminhao"><span class="ico">🚚</span> Caminhão</div>
+      <div class="nav-item" data-page="config"><span class="ico">⚙️</span> Configurações</div>
+    </div>
+
+    <div class="user-card">
+      <div class="avatar">HL</div>
+      <div class="user-info">
+        <strong>Hiellen Lima</strong>
+        <span>Gestora</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================ MAIN ============================ -->
+  <main class="content">
+    <header class="topbar">
+      <div class="page-title">
+        <h2 id="pageTitle">Visão Geral</h2>
+        <p id="pageSub">Painel completo do negócio — em tempo real</p>
+      </div>
+      <div class="city-today">
+        <div class="pulse"></div>
+        <div>
+          <div class="label">Cidade de hoje</div>
+          <div class="name" id="cityToday">Maracanaú/CE</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" title="Notificações">🔔<span class="dot"></span></button>
+        <button class="icon-btn" title="Backup">☁️</button>
+      </div>
+    </header>
+
+    <div class="scroll-area">
+
+      <!-- ============================ DASHBOARD ============================ -->
+      <section class="page active" id="page-dashboard">
+
+        <div class="alert-box info">
+          <span style="font-size:18px">💡</span>
+          <div>
+            <strong>Boa, Hiellen!</strong> Hoje o caminhão está em <strong id="alertCity">Maracanaú/CE</strong>.
+            Histórico desta cidade nas últimas visitas: <strong id="alertHist">R$ 2.140 médios</strong>.
+            <a href="#" onclick="goPage('rota');return false" style="color:var(--azul);font-weight:600">Ver rota completa →</a>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi green">
+            <div class="kpi-head">
+              <div>
+                <div class="kpi-label">Receita do mês</div>
+              </div>
+              <div class="kpi-icon">💰</div>
+            </div>
+            <div class="kpi-value" id="kReceitaMes">R$ 0</div>
+            <div class="kpi-foot"><span class="trend-up" id="kReceitaTrend">+12%</span> vs mês anterior</div>
+          </div>
+
+          <div class="kpi">
+            <div class="kpi-head">
+              <div><div class="kpi-label">Receita hoje</div></div>
+              <div class="kpi-icon">📅</div>
+            </div>
+            <div class="kpi-value" id="kReceitaHoje">R$ 0</div>
+            <div class="kpi-foot"><span id="kVendasHoje">0</span> vendas — ticket <span id="kTicket">R$ 0</span></div>
+          </div>
+
+          <div class="kpi gold">
+            <div class="kpi-head">
+              <div><div class="kpi-label">Lucro líquido (mês)</div></div>
+              <div class="kpi-icon">📈</div>
+            </div>
+            <div class="kpi-value" id="kLucroMes">R$ 0</div>
+            <div class="kpi-foot">Margem: <strong id="kMargem">0%</strong></div>
+          </div>
+
+          <div class="kpi purple">
+            <div class="kpi-head">
+              <div><div class="kpi-label">Cidades visitadas (mês)</div></div>
+              <div class="kpi-icon">🏙️</div>
+            </div>
+            <div class="kpi-value" id="kCidades">0</div>
+            <div class="kpi-foot"><span id="kKmRodados">0</span> km rodados</div>
+          </div>
+
+          <div class="kpi red">
+            <div class="kpi-head">
+              <div><div class="kpi-label">Custo combustível</div></div>
+              <div class="kpi-icon">⛽</div>
+            </div>
+            <div class="kpi-value" id="kCombustivel">R$ 0</div>
+            <div class="kpi-foot"><span id="kCombPct">0%</span> da receita</div>
+          </div>
+
+          <div class="kpi">
+            <div class="kpi-head">
+              <div><div class="kpi-label">Itens vendidos hoje</div></div>
+              <div class="kpi-icon">📦</div>
+            </div>
+            <div class="kpi-value" id="kItensHoje">0</div>
+            <div class="kpi-foot">Estoque total: <strong id="kEstoqueTotal">0 un.</strong></div>
+          </div>
+        </div>
+
+        <!-- Termômetro do dia -->
+        <div class="row-equal">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">🌡️</span> Termômetro do dia</div>
+                <div class="panel-sub">Como hoje está em relação à média histórica desta cidade</div>
+              </div>
+            </div>
+            <div class="therm-box">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                <span><strong id="thermCity">Maracanaú/CE</strong></span>
+                <span class="text-mute">Média hoje (qua): <strong id="thermMedia">R$ 0</strong></span>
+              </div>
+              <div class="therm-bar">
+                <div class="therm-marker" id="thermMarker" style="left:50%"></div>
+              </div>
+              <div class="therm-labels">
+                <span>Fraco</span><span>Médio</span><span>Bom</span><span>Excelente</span>
+              </div>
+              <div style="margin-top:14px;font-size:13px" id="thermMsg">Aguardando vendas do dia…</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">🎯</span> Meta mensal</div>
+                <div class="panel-sub">Acompanhamento da meta da gestão</div>
+              </div>
+            </div>
+            <div style="text-align:center;padding:10px 0">
+              <div style="font-family:'Poppins';font-size:32px;font-weight:800;color:var(--azul)" id="metaPct">0%</div>
+              <div class="text-mute" style="font-size:12.5px">da meta de <strong id="metaValor">R$ 80.000</strong></div>
+            </div>
+            <div class="progress" style="width:100%;height:10px;margin:14px 0 8px">
+              <div class="fill" id="metaBar" style="width:0%"></div>
+            </div>
+            <div class="flex justify-between" style="font-size:12px">
+              <span class="text-mute">Atingido: <strong id="metaAtingido">R$ 0</strong></span>
+              <span class="text-mute">Faltam: <strong id="metaFalta">R$ 0</strong></span>
+            </div>
+            <div class="divider"></div>
+            <div style="font-size:12.5px" id="metaProjecao">Projeção do mês: <strong style="color:var(--azul)">R$ 0</strong> (no ritmo atual)</div>
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">📊</span> Receita dos últimos 30 dias</div>
+                <div class="panel-sub">Linha por cidade + receita total</div>
+              </div>
+              <div class="panel-actions">
+                <button class="btn btn-ghost btn-sm">📥 Exportar</button>
+              </div>
+            </div>
+            <div class="chart-wrap lg"><canvas id="chartReceita30"></canvas></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">🏆</span> Top cidades do mês</div>
+                <div class="panel-sub">Onde o caminhão fatura mais</div>
+              </div>
+            </div>
+            <div id="topCidades"></div>
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">🛍️</span> Mix de vendas — categorias</div>
+                <div class="panel-sub">Quanto vende cada categoria</div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartCategorias"></canvas></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">⏰</span> Vendas por dia da semana</div>
+                <div class="panel-sub">Quais dias dão mais retorno</div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartDiaSemana"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><span class="ico">🚨</span> Alertas e oportunidades</div>
+              <div class="panel-sub">A IA do painel sugere ações para hoje</div>
+            </div>
+          </div>
+          <div id="insightsList"></div>
+        </div>
+
+      </section>
+
+      <!-- ============================ PDV ============================ -->
+      <section class="page" id="page-pdv">
+        <div class="alert-box success">
+          <span style="font-size:18px">🎯</span>
+          <div>
+            Caixa aberto em <strong id="pdvCity">Maracanaú/CE</strong> — dia <strong id="pdvDate"></strong>.
+            <span class="text-mute">Toque no produto para adicionar ao carrinho.</span>
+          </div>
+        </div>
+
+        <div class="pdv-layout">
+          <div>
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title"><span class="ico">🏷️</span> Catálogo</div>
+                  <div class="panel-sub">Tudo a R$10, exceto destaque ⭐</div>
+                </div>
+                <div class="panel-actions">
+                  <input type="text" id="pdvSearch" placeholder="Buscar produto…" style="padding:7px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:12.5px"/>
+                </div>
+              </div>
+              <div class="prod-grid" id="pdvProdGrid"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="cart-box">
+              <div class="cart-head">
+                <h3>🛒 Carrinho</h3>
+                <p id="cartCount">0 itens</p>
+              </div>
+              <div class="cart-items" id="cartItems">
+                <div class="cart-empty">Toque em um produto<br>para iniciar a venda</div>
+              </div>
+              <div class="cart-foot">
+                <div class="cart-total">
+                  <div class="lbl">Total</div>
+                  <div class="val" id="cartTotal">R$ 0,00</div>
+                </div>
+                <div class="pay-buttons">
+                  <button class="pay-btn active" data-pay="pix"><span class="ico">📱</span>PIX</button>
+                  <button class="pay-btn" data-pay="dinheiro"><span class="ico">💵</span>Dinheiro</button>
+                  <button class="pay-btn" data-pay="cartao"><span class="ico">💳</span>Cartão</button>
+                </div>
+                <button class="btn btn-success" style="width:100%;justify-content:center;padding:12px" onclick="finalizarVenda()">✅ Finalizar Venda</button>
+                <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px" onclick="esvaziarCarrinho()">🗑️ Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ ROTA ============================ -->
+      <section class="page" id="page-rota">
+        <div class="row-2">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">📅</span> Rota da semana</div>
+                <div class="panel-sub" id="weekSub">Semana de 01/06 a 07/06</div>
+              </div>
+              <div class="panel-actions">
+                <button class="btn btn-ghost btn-sm" onclick="prevWeek()">←</button>
+                <button class="btn btn-ghost btn-sm" onclick="nextWeek()">→</button>
+                <button class="btn btn-primary btn-sm" onclick="openModal('modalEditRota')">✏️ Editar rota</button>
+              </div>
+            </div>
+            <div class="route-week" id="routeWeek"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title"><span class="ico">🧠</span> Sugestão inteligente</div>
+                <div class="panel-sub">Próximas cidades recomendadas</div>
+              </div>
+            </div>
+            <div id="suggestCities"></div>
+            <div class="divider"></div>
+            <div style="font-size:11.5px;color:var(--cinza-mute);line-height:1.5">
+              <strong>Como funciona:</strong> O algoritmo cruza receita histórica × distância × dias desde última visita × dia da semana para sugerir os melhores municípios.
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><span class="ico">💡</span> Calculadora de viabilidade — nova cidade</div>
+              <div class="panel-sub">Antes de inserir uma cidade na rota, calcule o ponto de equilíbrio</div>
+            </div>
+          </div>
+          <div class="form-grid cols-3">
+            <div class="field"><label>Distância (km ida e volta)</label><input type="number" id="calcKm" value="120"/></div>
+            <div class="field"><label>Consumo combustível (km/L)</label><input type="number" id="calcKml" value="4" step="0.1"/></div>
+            <div class="field"><label>Preço do diesel (R$/L)</label><input type="number" id="calcDiesel" value="6.20" step="0.01"/></div>
+            <div class="field"><label>Custo fixo do dia (R$)</label><input type="number" id="calcFixo" value="350"/></div>
+            <div class="field"><label>Pedágio (R$)</label><input type="number" id="calcPedagio" value="0"/></div>
+            <div class="field"><label>Margem média (%)</label><input type="number" id="calcMargem" value="55"/></div>
+          </div>
+          <button class="btn btn-primary mt-12" onclick="calcViabilidade()">🧮 Calcular</button>
+          <div id="calcResult" style="margin-top:14px"></div>
+        </div>
+      </section>
+
+      <!-- ============================ CIDADES ============================ -->
+      <section class="page" id="page-cidades">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-head"><div class="kpi-label">Cidades já visitadas</div><div class="kpi-icon">🏙️</div></div><div class="kpi-value" id="cidTotal">0</div><div class="kpi-foot">no ano</div></div>
+          <div class="kpi green"><div class="kpi-head"><div class="kpi-label">Cidade ouro 🥇</div><div class="kpi-icon">🏆</div></div><div class="kpi-value" id="cidOuro" style="font-size:18px">—</div><div class="kpi-foot">maior receita acumulada</div></div>
+          <div class="kpi red"><div class="kpi-head"><div class="kpi-label">Cidade burro</div><div class="kpi-icon">📉</div></div><div class="kpi-value" id="cidBurro" style="font-size:18px">—</div><div class="kpi-foot">menor retorno — reavaliar</div></div>
+          <div class="kpi gold"><div class="kpi-head"><div class="kpi-label">Melhor dia da semana</div><div class="kpi-icon">⭐</div></div><div class="kpi-value" id="melhorDia" style="font-size:18px">—</div><div class="kpi-foot">média mais alta</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><span class="ico">🔥</span> Heatmap de receita por cidade</div>
+              <div class="panel-sub">Quanto mais escuro, mais o caminhão fatura ali</div>
+            </div>
+          </div>
+          <div class="heat-grid" id="heatGrid"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><span class="ico">📋</span> Ranking completo</div>
+              <div class="panel-sub">Métricas por município</div>
+            </div>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="tabelaCidades">
+              <thead>
+                <tr>
+                  <th>#</th><th>Cidade</th><th>Visitas</th><th>Receita total</th><th>Ticket médio</th><th>Última visita</th><th>Tendência</th><th>Ação</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ DIÁRIO ============================ -->
+      <section class="page" id="page-diario">
+        <div class="alert-box info">
+          <span style="font-size:18px">📓</span>
+          <div>Registre tudo que afetou o dia: chuva, evento na cidade, feira concorrente, fiscalização, problema mecânico. Isso vira inteligência depois.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">✍️</span> Nova entrada</div></div>
+          </div>
+          <div class="form-grid">
+            <div class="field"><label>Cidade</label><select id="dCity"></select></div>
+            <div class="field"><label>Data</label><input type="date" id="dDate"/></div>
+            <div class="field"><label>Categoria</label>
+              <select id="dCat">
+                <option value="note">📝 Observação geral</option>
+                <option value="win">🏆 Bom dia / vitória</option>
+                <option value="problem">⚠️ Problema / dificuldade</option>
+              </select>
+            </div>
+            <div class="field"><label>Climaa</label>
+              <select id="dClima">
+                <option>☀️ Sol</option><option>⛅ Nublado</option><option>🌧️ Chuva</option><option>🌪️ Vento forte</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column:span 2"><label>O que aconteceu?</label><textarea id="dText" placeholder="Ex: feira livre do mesmo dia atrapalhou. Sugestão: vir no domingo na próxima."></textarea></div>
+          </div>
+          <button class="btn btn-primary mt-12" onclick="salvarDiario()">💾 Salvar entrada</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">🗂️</span> Histórico</div></div>
+          </div>
+          <div class="diary-grid" id="diaryList"></div>
+        </div>
+      </section>
+
+      <!-- ============================ VENDAS ============================ -->
+      <section class="page" id="page-vendas">
+        <div class="kpi-grid">
+          <div class="kpi green"><div class="kpi-head"><div class="kpi-label">Vendas no mês</div><div class="kpi-icon">🛒</div></div><div class="kpi-value" id="vTotal">0</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-label">Ticket médio</div><div class="kpi-icon">🎟️</div></div><div class="kpi-value" id="vTicket">R$ 0</div></div>
+          <div class="kpi gold"><div class="kpi-head"><div class="kpi-label">Item mais vendido</div><div class="kpi-icon">⭐</div></div><div class="kpi-value" id="vTop" style="font-size:16px">—</div></div>
+          <div class="kpi purple"><div class="kpi-head"><div class="kpi-label">PIX é</div><div class="kpi-icon">📱</div></div><div class="kpi-value" id="vPix">0%</div><div class="kpi-foot">das vendas</div></div>
+        </div>
+
+        <div class="row-equal">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">💳</span> Forma de pagamento</div></div></div>
+            <div class="chart-wrap"><canvas id="chartPagamento"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">📊</span> Vendas por hora</div></div></div>
+            <div class="chart-wrap"><canvas id="chartHora"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">📜</span> Últimas vendas</div></div>
+            <div class="panel-actions">
+              <select id="filterCidadeVendas" style="padding:7px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:12.5px">
+                <option value="">Todas cidades</option>
+              </select>
+              <button class="btn btn-ghost btn-sm">📥 Exportar</button>
+            </div>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblVendas">
+              <thead><tr><th>Data/Hora</th><th>Cidade</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Vendedor</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ PRODUTOS ============================ -->
+      <section class="page" id="page-produtos">
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">🏷️</span> Catálogo de produtos</div><div class="panel-sub">Padrão R$10. Marque ⭐ para produtos de preço variável</div></div>
+            <div class="panel-actions">
+              <button class="btn btn-primary btn-sm" onclick="openModal('modalNovoProduto')">+ Novo produto</button>
+            </div>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblProdutos">
+              <thead><tr><th>Produto</th><th>Categoria</th><th>Custo</th><th>Preço</th><th>Margem</th><th>Estoque</th><th>Vendidos (mês)</th><th>Ações</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="row-equal">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">🔝</span> Top 10 mais vendidos</div></div></div>
+            <div class="chart-wrap lg"><canvas id="chartTopProd"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">📊</span> Margem por categoria</div></div></div>
+            <div class="chart-wrap lg"><canvas id="chartMargemCat"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ ESTOQUE ============================ -->
+      <section class="page" id="page-estoque">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-head"><div class="kpi-label">Valor em estoque</div><div class="kpi-icon">💎</div></div><div class="kpi-value" id="eValor">R$ 0</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-label">SKUs</div><div class="kpi-icon">🏷️</div></div><div class="kpi-value" id="eSku">0</div></div>
+          <div class="kpi gold"><div class="kpi-head"><div class="kpi-label">Estoque baixo</div><div class="kpi-icon">⚠️</div></div><div class="kpi-value" id="eBaixo">0</div></div>
+          <div class="kpi red"><div class="kpi-head"><div class="kpi-label">Sem estoque</div><div class="kpi-icon">🚨</div></div><div class="kpi-value" id="eZero">0</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">📦</span> Lista de reposição inteligente</div><div class="panel-sub">Produtos que precisam ser comprados — calculado pela velocidade de venda</div></div>
+            <div class="panel-actions">
+              <button class="btn btn-primary btn-sm" onclick="gerarListaCompras()">🧾 Gerar lista de compras</button>
+            </div>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblEstoque">
+              <thead><tr><th>Produto</th><th>Estoque atual</th><th>Velocidade (un/dia)</th><th>Dias restantes</th><th>Comprar (sugestão)</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ CLIENTES ============================ -->
+      <section class="page" id="page-clientes">
+        <div class="alert-box info">
+          <span style="font-size:18px">❤️</span>
+          <div><strong>Ideia que muda o jogo:</strong> capture o WhatsApp do cliente no caixa. Quando o caminhão for voltar à cidade, dispare um aviso. Cliente fiel é cliente que volta.</div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi red"><div class="kpi-head"><div class="kpi-label">Clientes cadastrados</div><div class="kpi-icon">❤️</div></div><div class="kpi-value" id="cTotal">0</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-label">VIP (≥3 compras)</div><div class="kpi-icon">⭐</div></div><div class="kpi-value" id="cVip">0</div></div>
+          <div class="kpi green"><div class="kpi-head"><div class="kpi-label">Aceitam WhatsApp</div><div class="kpi-icon">📱</div></div><div class="kpi-value" id="cWa">0</div></div>
+        </div>
+
+        <div class="row-2">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">👥</span> Base de clientes</div></div>
+            <div class="panel-actions">
+              <button class="btn btn-primary btn-sm" onclick="openModal('modalNovoCliente')">+ Cadastrar</button>
+            </div></div>
+            <div class="scroll-x">
+              <table class="tbl" id="tblClientes">
+                <thead><tr><th>Nome</th><th>Cidade</th><th>WhatsApp</th><th>Compras</th><th>Total gasto</th><th>Última</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">📣</span> Disparo em massa</div><div class="panel-sub">Avisar cidade da próxima visita</div></div></div>
+            <div class="field" style="margin-bottom:12px"><label>Cidade alvo</label><select id="waCidade"></select></div>
+            <div class="field" style="margin-bottom:12px"><label>Data da visita</label><input type="date" id="waData"/></div>
+            <div class="field" style="margin-bottom:12px"><label>Mensagem</label><textarea id="waMsg">Olá! 🚚📦 O *Lojão da Economia* vai estar em sua cidade no dia [DATA]! Tudo a R$10. Te esperamos no centro! ❤️</textarea></div>
+            <button class="btn wa-btn" style="width:100%;justify-content:center;padding:12px" onclick="dispararWa()">📲 Gerar disparos no WhatsApp</button>
+            <div class="text-mute" style="font-size:11px;margin-top:8px">Abre links wa.me para cada cliente da cidade. Você confirma antes de enviar.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ FINANCEIRO ============================ -->
+      <section class="page" id="page-financeiro">
+        <div class="kpi-grid">
+          <div class="kpi green"><div class="kpi-head"><div class="kpi-label">Receita do mês</div><div class="kpi-icon">💰</div></div><div class="kpi-value" id="fReceita">R$ 0</div></div>
+          <div class="kpi red"><div class="kpi-head"><div class="kpi-label">Despesas</div><div class="kpi-icon">💸</div></div><div class="kpi-value" id="fDespesas">R$ 0</div></div>
+          <div class="kpi gold"><div class="kpi-head"><div class="kpi-label">Lucro líquido</div><div class="kpi-icon">📈</div></div><div class="kpi-value" id="fLucro">R$ 0</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-label">Margem</div><div class="kpi-icon">📊</div></div><div class="kpi-value" id="fMargem">0%</div></div>
+        </div>
+
+        <div class="row-equal">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">📈</span> Receita × Despesa (6 meses)</div></div></div>
+            <div class="chart-wrap lg"><canvas id="chartRecDesp"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">🥧</span> Onde vai o dinheiro</div></div></div>
+            <div class="chart-wrap lg"><canvas id="chartDespCat"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><span class="ico">📋</span> DRE simplificado — mês corrente</div></div></div>
+          <table class="tbl">
+            <tbody id="dreBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============================ DESPESAS ============================ -->
+      <section class="page" id="page-despesas">
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">💸</span> Despesas</div></div>
+            <div class="panel-actions">
+              <button class="btn btn-primary btn-sm" onclick="openModal('modalNovaDespesa')">+ Lançar despesa</button>
+            </div>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblDespesas">
+              <thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Cidade</th><th>Valor</th><th>Ação</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ METAS ============================ -->
+      <section class="page" id="page-metas">
+        <div class="row-equal">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">🎯</span> Definir metas</div></div></div>
+            <div class="field" style="margin-bottom:12px"><label>Meta de receita mensal (R$)</label><input type="number" id="mReceita" value="80000"/></div>
+            <div class="field" style="margin-bottom:12px"><label>Meta de vendas/dia</label><input type="number" id="mVendas" value="120"/></div>
+            <div class="field" style="margin-bottom:12px"><label>Meta margem (%)</label><input type="number" id="mMargem" value="45"/></div>
+            <button class="btn btn-primary" onclick="salvarMetas()">💾 Salvar metas</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">📊</span> Progresso</div></div></div>
+            <div id="metasProgress"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ EQUIPE ============================ -->
+      <section class="page" id="page-equipe">
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">👥</span> Equipe</div></div>
+            <div class="panel-actions"><button class="btn btn-primary btn-sm" onclick="openModal('modalNovoMembro')">+ Novo membro</button></div>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblEquipe">
+              <thead><tr><th>Nome</th><th>Função</th><th>Salário fixo</th><th>Comissão %</th><th>Vendas (mês)</th><th>A receber</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ CAMINHÃO ============================ -->
+      <section class="page" id="page-caminhao">
+        <div class="truck-card">
+          <h3>🚚 Caminhão Lojão 01</h3>
+          <p style="opacity:.85;font-size:13px">Mercedes Accelo 815 — Placa <strong>QXY-1A23</strong></p>
+          <div class="truck-stats">
+            <div class="truck-stat"><div class="lbl">Hodômetro</div><div class="val" id="trKm">68.420 km</div></div>
+            <div class="truck-stat"><div class="lbl">Consumo médio</div><div class="val">4,2 km/L</div></div>
+            <div class="truck-stat"><div class="lbl">Custo/km</div><div class="val" id="trCusto">R$ 1,58</div></div>
+            <div class="truck-stat"><div class="lbl">Próx. revisão</div><div class="val" id="trRev">em 1.580 km</div></div>
+          </div>
+        </div>
+
+        <div class="row-equal">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">🔧</span> Manutenções</div></div>
+            <div class="panel-actions"><button class="btn btn-primary btn-sm" onclick="openModal('modalNovaManut')">+ Registrar</button></div></div>
+            <div class="scroll-x">
+              <table class="tbl" id="tblManut">
+                <thead><tr><th>Data</th><th>Tipo</th><th>KM</th><th>Custo</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title"><span class="ico">⛽</span> Consumo dos últimos 30 dias</div></div></div>
+            <div class="chart-wrap"><canvas id="chartCombustivel"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ CONFIG ============================ -->
+      <section class="page" id="page-config">
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><span class="ico">⚙️</span> Configurações gerais</div></div></div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Nome do negócio</strong><span>Aparece em relatórios e impressos</span></div>
+            <input type="text" value="Lojão da Economia" style="padding:7px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:13px"/>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Gestora responsável</strong><span>Hiellen Lima</span></div>
+            <span class="badge b-blue">Administrador</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Preço padrão de produto</strong><span>Aplicado em cadastros novos</span></div>
+            <input type="number" value="10" style="padding:7px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:13px;width:100px"/>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Backup automático</strong><span>Salva dados no navegador (localStorage)</span></div>
+            <span class="badge b-green">Ativo</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Exportar tudo</strong><span>Baixa um JSON com todos os dados do sistema</span></div>
+            <button class="btn btn-ghost btn-sm" onclick="exportarTudo()">📥 Baixar backup</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Resetar dados</strong><span>Volta para os dados de exemplo</span></div>
+            <button class="btn btn-danger btn-sm" onclick="if(confirm('Tem certeza? Isso apaga tudo.')){localStorage.clear();location.reload()}">🗑️ Resetar</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ====================== MODAIS ====================== -->
+
+<div class="modal-bg" id="modalNovoProduto">
+  <div class="modal">
+    <div class="modal-head"><h3>Novo Produto</h3><button class="close-x" onclick="closeModal('modalNovoProduto')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field" style="grid-column:span 2"><label>Nome do produto</label><input id="npNome" placeholder="Ex: Pano de prato"/></div>
+        <div class="field"><label>Categoria</label>
+          <select id="npCat">
+            <option>Casa</option><option>Higiene</option><option>Beleza</option>
+            <option>Vestuário</option><option>Eletrônicos</option><option>Brinquedos</option>
+            <option>Cozinha</option><option>Escola</option>
+          </select>
+        </div>
+        <div class="field"><label>Emoji</label><input id="npEmoji" value="🏷️"/></div>
+        <div class="field"><label>Custo (R$)</label><input type="number" id="npCusto" step="0.01" value="4.50"/></div>
+        <div class="field"><label>Preço de venda (R$)</label><input type="number" id="npPreco" step="0.01" value="10.00"/></div>
+        <div class="field"><label>Estoque inicial</label><input type="number" id="npEstoque" value="50"/></div>
+        <div class="field"><label>Estoque mínimo</label><input type="number" id="npMin" value="10"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalNovoProduto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalNovaDespesa">
+  <div class="modal">
+    <div class="modal-head"><h3>Lançar Despesa</h3><button class="close-x" onclick="closeModal('modalNovaDespesa')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Data</label><input type="date" id="ndData"/></div>
+        <div class="field"><label>Categoria</label>
+          <select id="ndCat">
+            <option>⛽ Combustível</option><option>🍽️ Alimentação</option><option>🏨 Hospedagem</option>
+            <option>🛣️ Pedágio</option><option>🔧 Manutenção</option><option>📦 Compra de produtos</option>
+            <option>💰 Salários</option><option>📣 Marketing</option><option>📃 Tributos</option><option>🏢 Aluguel</option><option>Outros</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:span 2"><label>Descrição</label><input id="ndDesc"/></div>
+        <div class="field"><label>Cidade (se aplicável)</label><select id="ndCidade"><option value="">—</option></select></div>
+        <div class="field"><label>Valor (R$)</label><input type="number" id="ndValor" step="0.01"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalNovaDespesa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarDespesa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalNovoCliente">
+  <div class="modal">
+    <div class="modal-head"><h3>Cadastrar Cliente</h3><button class="close-x" onclick="closeModal('modalNovoCliente')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field" style="grid-column:span 2"><label>Nome</label><input id="ncNome"/></div>
+        <div class="field"><label>WhatsApp</label><input id="ncWa" placeholder="85998765432"/></div>
+        <div class="field"><label>Cidade</label><select id="ncCidade"></select></div>
+        <div class="field" style="grid-column:span 2"><label>
+          <input type="checkbox" id="ncAceitaWa" checked/> Aceita receber avisos da próxima visita
+        </label></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalNovoCliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalNovoMembro">
+  <div class="modal">
+    <div class="modal-head"><h3>Novo Membro de Equipe</h3><button class="close-x" onclick="closeModal('modalNovoMembro')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field" style="grid-column:span 2"><label>Nome</label><input id="nmNome"/></div>
+        <div class="field"><label>Função</label>
+          <select id="nmFuncao"><option>Vendedor(a)</option><option>Motorista</option><option>Auxiliar</option><option>Gestão</option></select>
+        </div>
+        <div class="field"><label>Salário fixo</label><input type="number" id="nmSal" value="1500" step="0.01"/></div>
+        <div class="field"><label>Comissão %</label><input type="number" id="nmCom" value="3" step="0.1"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalNovoMembro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMembro()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalNovaManut">
+  <div class="modal">
+    <div class="modal-head"><h3>Registrar Manutenção</h3><button class="close-x" onclick="closeModal('modalNovaManut')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Data</label><input type="date" id="mmData"/></div>
+        <div class="field"><label>Tipo</label>
+          <select id="mmTipo">
+            <option>Troca de óleo</option><option>Pneus</option><option>Freios</option>
+            <option>Suspensão</option><option>Revisão geral</option><option>Bateria</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="field"><label>KM no momento</label><input type="number" id="mmKm"/></div>
+        <div class="field"><label>Custo (R$)</label><input type="number" id="mmCusto" step="0.01"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalNovaManut')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarManutencao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalEditRota">
+  <div class="modal">
+    <div class="modal-head"><h3>Editar Rota da Semana</h3><button class="close-x" onclick="closeModal('modalEditRota')">×</button></div>
+    <div class="modal-body" id="editRotaBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalEditRota')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRota()">Salvar rota</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   ESTADO + PERSISTÊNCIA
+================================================================ */
+const STORE_KEY='lojaoEconomia_v1';
+
+const CIDADES_BASE=[
+  'Maracanaú/CE','Caucaia/CE','Pacatuba/CE','Maranguape/CE','Itaitinga/CE',
+  'Aquiraz/CE','Eusébio/CE','Pacajus/CE','Horizonte/CE','Cascavel/CE',
+  'Beberibe/CE','Pindoretama/CE','Chorozinho/CE','Aracoiaba/CE','Redenção/CE',
+  'Acarape/CE','Barreira/CE','Ocara/CE','Itapiúna/CE','Capistrano/CE',
+  'Baturité/CE','Guaiúba/CE','Palhano/CE','Russas/CE','Limoeiro do Norte/CE'
+];
+
+const PRODUTOS_BASE=[
+  {nome:'Pano de prato',cat:'Casa',emoji:'🧽',custo:4.0,preco:10,estoque:120,min:30},
+  {nome:'Toalha de rosto',cat:'Casa',emoji:'🧻',custo:5.5,preco:10,estoque:80,min:20},
+  {nome:'Escova de dente kit',cat:'Higiene',emoji:'🪥',custo:3.5,preco:10,estoque:200,min:50},
+  {nome:'Sabonete kit 3un',cat:'Higiene',emoji:'🧼',custo:4.2,preco:10,estoque:160,min:40},
+  {nome:'Chinelo simples',cat:'Vestuário',emoji:'🩴',custo:5.5,preco:10,estoque:140,min:30},
+  {nome:'Camiseta básica',cat:'Vestuário',emoji:'👕',custo:6.0,preco:10,estoque:90,min:25},
+  {nome:'Cueca / Calcinha',cat:'Vestuário',emoji:'🩲',custo:3.5,preco:10,estoque:8,min:30},
+  {nome:'Meia kit 3un',cat:'Vestuário',emoji:'🧦',custo:4.0,preco:10,estoque:110,min:25},
+  {nome:'Caderno pequeno',cat:'Escola',emoji:'📓',custo:4.5,preco:10,estoque:60,min:15},
+  {nome:'Kit canetas (5)',cat:'Escola',emoji:'🖊️',custo:3.0,preco:10,estoque:75,min:20},
+  {nome:'Pote de mantimento',cat:'Cozinha',emoji:'🥣',custo:5.0,preco:10,estoque:95,min:20},
+  {nome:'Vassoura mini',cat:'Casa',emoji:'🧹',custo:6.0,preco:10,estoque:40,min:10},
+  {nome:'Esponja kit',cat:'Cozinha',emoji:'🧽',custo:2.5,preco:10,estoque:180,min:40},
+  {nome:'Detergente 500ml',cat:'Cozinha',emoji:'🧴',custo:3.0,preco:10,estoque:5,min:30},
+  {nome:'Esmalte (cores)',cat:'Beleza',emoji:'💅',custo:3.0,preco:10,estoque:130,min:30},
+  {nome:'Batom',cat:'Beleza',emoji:'💄',custo:4.5,preco:10,estoque:85,min:20},
+  {nome:'Hidratante 100ml',cat:'Beleza',emoji:'🧴',custo:5.0,preco:10,estoque:60,min:15},
+  {nome:'Cabo USB',cat:'Eletrônicos',emoji:'🔌',custo:4.5,preco:10,estoque:70,min:20},
+  {nome:'Fone de ouvido',cat:'Eletrônicos',emoji:'🎧',custo:5.0,preco:10,estoque:55,min:15},
+  {nome:'Carregador celular',cat:'Eletrônicos',emoji:'🔋',custo:6.0,preco:10,estoque:45,min:15},
+  {nome:'Carrinho brinquedo',cat:'Brinquedos',emoji:'🚗',custo:5.5,preco:10,estoque:30,min:10},
+  {nome:'Boneca pequena',cat:'Brinquedos',emoji:'🪆',custo:6.0,preco:10,estoque:25,min:10},
+  {nome:'Tapete cozinha ⭐',cat:'Casa',emoji:'🪟',custo:14,preco:25,estoque:18,min:5,variavel:true},
+  {nome:'Conjunto panelas ⭐',cat:'Cozinha',emoji:'🍳',custo:28,preco:45,estoque:6,min:3,variavel:true},
+  {nome:'Ventilador mini ⭐',cat:'Eletrônicos',emoji:'🌀',custo:22,preco:35,estoque:12,min:4,variavel:true},
+];
+
+const EQUIPE_BASE=[
+  {nome:'Hiellen Lima',funcao:'Gestão',sal:0,com:0},
+  {nome:'Carlos (motorista)',funcao:'Motorista',sal:1800,com:0},
+  {nome:'Jéssica',funcao:'Vendedor(a)',sal:1400,com:3},
+  {nome:'Pedro',funcao:'Vendedor(a)',sal:1400,com:3},
+  {nome:'Ana',funcao:'Auxiliar',sal:1200,com:2},
+];
+
+const CLIENTES_BASE=[
+  {nome:'Maria Aparecida',wa:'85988111122',cidade:'Maracanaú/CE',compras:5,gasto:230,ult:hojeMinus(8),aceitaWa:true},
+  {nome:'José Roberto',wa:'85997223344',cidade:'Pacajus/CE',compras:3,gasto:120,ult:hojeMinus(15),aceitaWa:true},
+  {nome:'Tereza Souza',wa:'85988445566',cidade:'Aquiraz/CE',compras:7,gasto:380,ult:hojeMinus(4),aceitaWa:true},
+  {nome:'Antônio Lima',wa:'85992556677',cidade:'Caucaia/CE',compras:2,gasto:75,ult:hojeMinus(22),aceitaWa:false},
+  {nome:'Francisca',wa:'85994778899',cidade:'Horizonte/CE',compras:4,gasto:165,ult:hojeMinus(12),aceitaWa:true},
+];
+
+const ROTA_PADRAO=['Maracanaú/CE','Pacajus/CE','Horizonte/CE','Cascavel/CE','Aquiraz/CE','Eusébio/CE','Caucaia/CE'];
+
+function hojeMinus(d){const dt=new Date();dt.setDate(dt.getDate()-d);return dt.toISOString().split('T')[0]}
+function hoje(){return new Date().toISOString().split('T')[0]}
+function fmtBR(v){return 'R$ '+(Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtBRk(v){return 'R$ '+(Number(v)||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}
+function dataBR(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('pt-BR')}
+function diaSem(s){const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];return dias[new Date(s+'T00:00:00').getDay()]}
+
+/* ----------- seed ----------- */
+function seed(){
+  const state={
+    produtos:PRODUTOS_BASE.map((p,i)=>({id:i+1,...p})),
+    cidades:CIDADES_BASE.slice(),
+    equipe:EQUIPE_BASE.map((e,i)=>({id:i+1,...e})),
+    clientes:CLIENTES_BASE.map((c,i)=>({id:i+1,...c})),
+    vendas:[],
+    despesas:[],
+    rota:{},
+    diario:[],
+    manutencoes:[
+      {data:hojeMinus(45),tipo:'Troca de óleo',km:65800,custo:380},
+      {data:hojeMinus(25),tipo:'Pneus dianteiros',km:67100,custo:1450},
+      {data:hojeMinus(7),tipo:'Revisão geral',km:68200,custo:680},
+    ],
+    metas:{receita:80000,vendas:120,margem:45},
+    caminhao:{km:68420,kml:4.2,placa:'QXY-1A23',modelo:'Mercedes Accelo 815',proxRevisao:70000},
+  };
+
+  // Rotas das próximas semanas
+  for(let i=-7;i<=14;i++){
+    const dt=new Date();dt.setDate(dt.getDate()+i);
+    const key=dt.toISOString().split('T')[0];
+    state.rota[key]=ROTA_PADRAO[Math.abs(i+7)%ROTA_PADRAO.length];
+  }
+
+  // Vendas dos últimos 30 dias
+  for(let d=29;d>=0;d--){
+    const dt=new Date();dt.setDate(dt.getDate()-d);
+    const data=dt.toISOString().split('T')[0];
+    const cidade=state.rota[data]||CIDADES_BASE[d%CIDADES_BASE.length];
+    const numVendas=80+Math.floor(Math.random()*90);
+    for(let v=0;v<numVendas;v++){
+      const hora=9+Math.floor(Math.random()*9);
+      const min=Math.floor(Math.random()*60);
+      const numItens=1+Math.floor(Math.random()*3);
+      const itens=[];let total=0;
+      for(let j=0;j<numItens;j++){
+        const prod=state.produtos[Math.floor(Math.random()*state.produtos.length)];
+        const qt=1+Math.floor(Math.random()*2);
+        itens.push({prodId:prod.id,nome:prod.nome,qt,preco:prod.preco});
+        total+=qt*prod.preco;
+      }
+      const pagamentos=['pix','pix','pix','dinheiro','dinheiro','cartao'];
+      const vendedor=state.equipe.filter(e=>e.funcao==='Vendedor(a)')[Math.floor(Math.random()*2)];
+      state.vendas.push({
+        id:state.vendas.length+1,
+        data,hora:`${String(hora).padStart(2,'0')}:${String(min).padStart(2,'0')}`,
+        cidade,itens,total,
+        pagamento:pagamentos[Math.floor(Math.random()*pagamentos.length)],
+        vendedor:vendedor?vendedor.nome:'Jéssica',
+      });
+    }
+  }
+
+  // Despesas dos últimos 30 dias
+  for(let d=29;d>=0;d--){
+    const data=hojeMinus(d);
+    const cidade=state.rota[data]||'';
+    state.despesas.push({data,cat:'⛽ Combustível',desc:'Diesel do dia',cidade,valor:180+Math.random()*120});
+    state.despesas.push({data,cat:'🍽️ Alimentação',desc:'Almoço equipe',cidade,valor:60+Math.random()*40});
+    if(d%7===0)state.despesas.push({data,cat:'📦 Compra de produtos',desc:'Reposição estoque',cidade:'',valor:3500+Math.random()*1500});
+    if(d%15===0)state.despesas.push({data,cat:'🔧 Manutenção',desc:'Manutenção preventiva',cidade:'',valor:380+Math.random()*200});
+    if(d===5)state.despesas.push({data,cat:'🏨 Hospedagem',desc:'Pernoite equipe',cidade,valor:240});
+  }
+
+  // Despesas mensais (salários)
+  state.equipe.forEach(e=>{
+    if(e.sal>0)state.despesas.push({data:hojeMinus(2),cat:'💰 Salários',desc:`Salário ${e.nome}`,cidade:'',valor:e.sal});
+  });
+  state.despesas.push({data:hojeMinus(2),cat:'🏢 Aluguel',desc:'Galpão estoque',cidade:'',valor:1800});
+
+  // Diário
+  state.diario=[
+    {data:hojeMinus(2),cidade:'Cascavel/CE',cat:'win',clima:'☀️ Sol',texto:'Dia excepcional! Feira do bairro trouxe muita gente. Faturamos quase R$3 mil.'},
+    {data:hojeMinus(5),cidade:'Beberibe/CE',cat:'problem',clima:'🌧️ Chuva',texto:'Chuva forte no fim da tarde. Precisamos pensar em lona maior. Faturamento ficou metade.'},
+    {data:hojeMinus(10),cidade:'Pacatuba/CE',cat:'note',clima:'⛅ Nublado',texto:'Concorrente abriu mercadinho perto. Avaliar se vale continuar visitando às 4ªs.'},
+  ];
+
+  return state;
+}
+
+let S=JSON.parse(localStorage.getItem(STORE_KEY)||'null')||seed();
+function save(){localStorage.setItem(STORE_KEY,JSON.stringify(S))}
+
+/* ================================================================
+   NAVEGAÇÃO
+================================================================ */
+const PAGES={
+  dashboard:['Visão Geral','Painel completo do negócio — em tempo real'],
+  pdv:['PDV — Caixa do Dia','Registre as vendas da cidade visitada hoje'],
+  rota:['Rota & Calendário','Planejamento de cidades + sugestão inteligente'],
+  cidades:['Cidades & Performance','Heatmap e ranking de municípios'],
+  diario:['Diário de Bordo','Tudo que afetou o dia, virando inteligência'],
+  vendas:['Vendas','Histórico, ticket médio, formas de pagamento'],
+  produtos:['Produtos','Catálogo, margem, produtos mais vendidos'],
+  estoque:['Estoque','Alertas e lista inteligente de reposição'],
+  clientes:['Clientes & Fidelidade','Base + disparo WhatsApp para retorno à cidade'],
+  financeiro:['Financeiro / DRE','Receitas, despesas, lucro e margem'],
+  despesas:['Despesas','Lançamentos e controle por categoria'],
+  metas:['Metas','Acompanhamento da meta da gestão'],
+  equipe:['Equipe','Folha, comissão e performance'],
+  caminhao:['Caminhão','Manutenções e consumo do veículo'],
+  config:['Configurações','Ajustes do sistema'],
+};
+function goPage(p){
+  document.querySelectorAll('.page').forEach(s=>s.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===p));
+  document.getElementById('pageTitle').textContent=PAGES[p][0];
+  document.getElementById('pageSub').textContent=PAGES[p][1];
+  if(p==='dashboard')renderDash();
+  if(p==='pdv')renderPdv();
+  if(p==='rota')renderRota();
+  if(p==='cidades')renderCidades();
+  if(p==='diario')renderDiario();
+  if(p==='vendas')renderVendas();
+  if(p==='produtos')renderProdutos();
+  if(p==='estoque')renderEstoque();
+  if(p==='clientes')renderClientes();
+  if(p==='financeiro')renderFinanceiro();
+  if(p==='despesas')renderDespesas();
+  if(p==='metas')renderMetas();
+  if(p==='equipe')renderEquipe();
+  if(p==='caminhao')renderCaminhao();
+}
+document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>goPage(n.dataset.page)));
+
+/* ================================================================
+   UI HELPERS
+================================================================ */
+function openModal(id){document.getElementById(id).classList.add('show');if(id==='modalNovaDespesa')document.getElementById('ndData').value=hoje();if(id==='modalNovaManut')document.getElementById('mmData').value=hoje();if(id==='modalEditRota')renderEditRota();}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  setTimeout(()=>t.className='toast',2500);
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+
+/* ================================================================
+   DASHBOARD
+================================================================ */
+let charts={};
+function destroy(name){if(charts[name]){charts[name].destroy();delete charts[name]}}
+
+function renderDash(){
+  const hojeStr=hoje();
+  const cidadeHoje=S.rota[hojeStr]||'—';
+  document.getElementById('cityToday').textContent=cidadeHoje;
+  document.getElementById('alertCity').textContent=cidadeHoje;
+  document.getElementById('thermCity').textContent=cidadeHoje;
+
+  // Média histórica desta cidade
+  const histCity=S.vendas.filter(v=>v.cidade===cidadeHoje);
+  const dias=[...new Set(histCity.map(v=>v.data))];
+  const totaisDia=dias.map(d=>histCity.filter(v=>v.data===d).reduce((s,v)=>s+v.total,0));
+  const mediaHist=totaisDia.length?totaisDia.reduce((a,b)=>a+b,0)/totaisDia.length:0;
+  document.getElementById('alertHist').textContent=fmtBRk(mediaHist)+' médios';
+  document.getElementById('thermMedia').textContent=fmtBR(mediaHist);
+
+  // KPIs mês
+  const mes=hojeStr.substring(0,7);
+  const vendasMes=S.vendas.filter(v=>v.data.startsWith(mes));
+  const receitaMes=vendasMes.reduce((s,v)=>s+v.total,0);
+  document.getElementById('kReceitaMes').textContent=fmtBRk(receitaMes);
+
+  const vendasHoje=S.vendas.filter(v=>v.data===hojeStr);
+  const receitaHoje=vendasHoje.reduce((s,v)=>s+v.total,0);
+  document.getElementById('kReceitaHoje').textContent=fmtBRk(receitaHoje);
+  document.getElementById('kVendasHoje').textContent=vendasHoje.length;
+  document.getElementById('kTicket').textContent=vendasHoje.length?fmtBR(receitaHoje/vendasHoje.length):'R$ 0';
+  document.getElementById('kItensHoje').textContent=vendasHoje.reduce((s,v)=>s+v.itens.reduce((x,i)=>x+i.qt,0),0);
+
+  // Despesas mês
+  const despMes=S.despesas.filter(d=>d.data.startsWith(mes)).reduce((s,d)=>s+d.valor,0);
+  const lucroMes=receitaMes-despMes;
+  document.getElementById('kLucroMes').textContent=fmtBRk(lucroMes);
+  document.getElementById('kMargem').textContent=receitaMes?((lucroMes/receitaMes)*100).toFixed(1)+'%':'0%';
+
+  // Combustível
+  const combMes=S.despesas.filter(d=>d.data.startsWith(mes)&&d.cat.includes('Combustível')).reduce((s,d)=>s+d.valor,0);
+  document.getElementById('kCombustivel').textContent=fmtBRk(combMes);
+  document.getElementById('kCombPct').textContent=receitaMes?((combMes/receitaMes)*100).toFixed(1)+'%':'0%';
+
+  // Cidades visitadas mês
+  const citDif=new Set(vendasMes.map(v=>v.cidade));
+  document.getElementById('kCidades').textContent=citDif.size;
+  document.getElementById('kKmRodados').textContent=(citDif.size*120).toLocaleString('pt-BR');
+
+  // Estoque total
+  document.getElementById('kEstoqueTotal').textContent=S.produtos.reduce((s,p)=>s+p.estoque,0).toLocaleString('pt-BR')+' un';
+
+  // Termômetro
+  const min=mediaHist*0.4,max=mediaHist*1.6;
+  let pct=mediaHist?Math.min(100,Math.max(0,((receitaHoje-min)/(max-min))*100)):50;
+  document.getElementById('thermMarker').style.left=pct+'%';
+  const thermMsg=document.getElementById('thermMsg');
+  if(!vendasHoje.length){thermMsg.innerHTML='<span class="text-mute">Aguardando primeiras vendas do dia para comparar com o histórico.</span>'}
+  else if(receitaHoje>mediaHist*1.2)thermMsg.innerHTML='<span style="color:var(--verde);font-weight:600">🔥 Excelente!</span> Hoje está '+Math.round((receitaHoje/mediaHist-1)*100)+'% acima da média desta cidade.';
+  else if(receitaHoje>mediaHist*0.8)thermMsg.innerHTML='<span style="color:var(--azul);font-weight:600">👍 Dentro do esperado.</span> Continue assim.';
+  else thermMsg.innerHTML='<span style="color:var(--coracao);font-weight:600">⚠️ Abaixo da média</span> — anote no diário se há algo afetando hoje (chuva, evento, etc).';
+
+  // Meta
+  const meta=S.metas.receita;
+  const pctMeta=Math.min(100,(receitaMes/meta)*100);
+  document.getElementById('metaPct').textContent=pctMeta.toFixed(0)+'%';
+  document.getElementById('metaValor').textContent=fmtBRk(meta);
+  document.getElementById('metaAtingido').textContent=fmtBRk(receitaMes);
+  document.getElementById('metaFalta').textContent=fmtBRk(Math.max(0,meta-receitaMes));
+  document.getElementById('metaBar').style.width=pctMeta+'%';
+  const diaMes=new Date().getDate();
+  const diasMes=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  const proj=(receitaMes/diaMes)*diasMes;
+  document.getElementById('metaProjecao').innerHTML=`Projeção do mês: <strong style="color:${proj>=meta?'var(--verde)':'var(--coracao)'}">${fmtBRk(proj)}</strong> (no ritmo atual)`;
+
+  // Gráficos
+  destroy('rec30');
+  const last30=[];const today=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);last30.push(d.toISOString().split('T')[0])}
+  const data30=last30.map(d=>S.vendas.filter(v=>v.data===d).reduce((s,v)=>s+v.total,0));
+  charts.rec30=new Chart(document.getElementById('chartReceita30'),{
+    type:'line',
+    data:{labels:last30.map(d=>{const dt=new Date(d+'T00:00:00');return dt.getDate()+'/'+(dt.getMonth()+1)}),
+      datasets:[{label:'Receita',data:data30,borderColor:'#1B4FA0',backgroundColor:'rgba(27,79,160,.1)',fill:true,tension:.35,pointRadius:0,borderWidth:2.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'R$'+v}}}}
+  });
+
+  // Top cidades
+  const cidStats={};
+  vendasMes.forEach(v=>{cidStats[v.cidade]=(cidStats[v.cidade]||0)+v.total});
+  const top=Object.entries(cidStats).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxVal=top[0]?top[0][1]:1;
+  const cidUlt={};
+  S.vendas.forEach(v=>{if(!cidUlt[v.cidade]||v.data>cidUlt[v.cidade])cidUlt[v.cidade]=v.data});
+  document.getElementById('topCidades').innerHTML=top.map(([c,v],i)=>{
+    const cls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    return `<div class="city-rank ${cls}">
+      <div class="rank-num">${i+1}</div>
+      <div><div class="name">${c}</div><div class="meta">última: ${dataBR(cidUlt[c])}</div></div>
+      <div class="progress"><div class="fill" style="width:${(v/maxVal*100).toFixed(0)}%"></div></div>
+      <div class="val">${fmtBRk(v)}</div>
+    </div>`;
+  }).join('');
+
+  // Categorias
+  destroy('cat');
+  const catStats={};
+  vendasMes.forEach(v=>v.itens.forEach(it=>{
+    const p=S.produtos.find(p=>p.id===it.prodId);
+    if(p)catStats[p.cat]=(catStats[p.cat]||0)+it.qt*it.preco;
+  }));
+  charts.cat=new Chart(document.getElementById('chartCategorias'),{
+    type:'doughnut',
+    data:{labels:Object.keys(catStats),datasets:[{data:Object.values(catStats),
+      backgroundColor:['#1B4FA0','#E94C5A','#F59E0B','#16A34A','#8B5CF6','#06B6D4','#EC4899','#84CC16']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}
+  });
+
+  // Dia da semana
+  destroy('ds');
+  const dsStats=[0,0,0,0,0,0,0],dsCount=[0,0,0,0,0,0,0];
+  vendasMes.forEach(v=>{const d=new Date(v.data+'T00:00:00').getDay();dsStats[d]+=v.total;dsCount[d]++});
+  charts.ds=new Chart(document.getElementById('chartDiaSemana'),{
+    type:'bar',
+    data:{labels:['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],
+      datasets:[{label:'Receita',data:dsStats,backgroundColor:'#1B4FA0',borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'R$'+v}}}}
+  });
+
+  // Insights / IA
+  const insights=[];
+  // Estoque baixo
+  const baixos=S.produtos.filter(p=>p.estoque<=p.min);
+  if(baixos.length)insights.push({tipo:'danger',ico:'🚨',txt:`<strong>${baixos.length} produtos com estoque baixo</strong> — ${baixos.slice(0,3).map(p=>p.nome).join(', ')}${baixos.length>3?'…':''}. <a onclick="goPage('estoque')" style="color:var(--azul);cursor:pointer">Ver lista de reposição →</a>`});
+  // Melhor cidade
+  if(top[0])insights.push({tipo:'success',ico:'🏆',txt:`<strong>${top[0][0]}</strong> é a cidade ouro do mês com ${fmtBRk(top[0][1])} em receita.`});
+  // Cidade fraca
+  if(top.length>3){
+    const piores=Object.entries(cidStats).sort((a,b)=>a[1]-b[1])[0];
+    insights.push({tipo:'',ico:'📉',txt:`<strong>${piores[0]}</strong> rendeu apenas ${fmtBRk(piores[1])} no mês. Considere reduzir frequência ou mudar o dia da semana.`});
+  }
+  // Pix
+  const totPix=vendasMes.filter(v=>v.pagamento==='pix').length;
+  const pctPix=vendasMes.length?(totPix/vendasMes.length*100).toFixed(0):0;
+  if(pctPix>60)insights.push({tipo:'',ico:'📱',txt:`<strong>${pctPix}%</strong> das vendas são via PIX. Considere imprimir um QR Code grande do PIX no caminhão.`});
+  // Próxima cidade
+  const amanha=new Date();amanha.setDate(amanha.getDate()+1);
+  const cAmanha=S.rota[amanha.toISOString().split('T')[0]];
+  if(cAmanha){
+    const clientesAm=S.clientes.filter(c=>c.cidade===cAmanha&&c.aceitaWa).length;
+    if(clientesAm>0)insights.push({tipo:'info',ico:'📣',txt:`Amanhã o caminhão vai para <strong>${cAmanha}</strong>. Há <strong>${clientesAm} clientes cadastrados</strong> nessa cidade. <a onclick="goPage('clientes')" style="color:var(--azul);cursor:pointer">Disparar aviso WhatsApp →</a>`});
+  }
+
+  document.getElementById('insightsList').innerHTML=insights.length?insights.map(i=>`
+    <div class="alert-box ${i.tipo}"><span style="font-size:18px">${i.ico}</span><div>${i.txt}</div></div>
+  `).join(''):'<div class="text-mute" style="padding:20px;text-align:center">Sem alertas no momento. Tudo certo!</div>';
+
+  // Badge estoque
+  document.getElementById('badgeEstoque').textContent=baixos.length;
+  document.getElementById('badgeEstoque').style.display=baixos.length?'inline-block':'none';
+}
+
+/* ================================================================
+   PDV
+================================================================ */
+let carrinho=[];let pagamentoSel='pix';
+function renderPdv(){
+  document.getElementById('pdvCity').textContent=S.rota[hoje()]||'—';
+  document.getElementById('pdvDate').textContent=new Date().toLocaleDateString('pt-BR');
+
+  const search=document.getElementById('pdvSearch').value.toLowerCase();
+  document.getElementById('pdvProdGrid').innerHTML=S.produtos
+    .filter(p=>!search||p.nome.toLowerCase().includes(search))
+    .map(p=>{
+      const cls=p.estoque<=0?'out':p.estoque<=p.min?'low':'';
+      return `<div class="prod-card ${cls}" onclick="addCart(${p.id})">
+        <div class="prod-img">${p.emoji}</div>
+        <div class="prod-name">${p.nome}</div>
+        <div class="prod-price">${fmtBR(p.preco).replace('R$ ','R$')}</div>
+        <div class="prod-stock">${p.estoque} em estoque</div>
+      </div>`;
+    }).join('');
+  renderCart();
+}
+document.getElementById('pdvSearch').addEventListener('input',renderPdv);
+document.querySelectorAll('.pay-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.pay-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');pagamentoSel=b.dataset.pay;
+}));
+
+function addCart(id){
+  const p=S.produtos.find(x=>x.id===id);if(!p||p.estoque<=0)return;
+  const it=carrinho.find(c=>c.prodId===id);
+  if(it){if(it.qt<p.estoque)it.qt++;else return toast('Estoque insuficiente','error')}
+  else carrinho.push({prodId:id,nome:p.nome,preco:p.preco,qt:1,emoji:p.emoji});
+  renderCart();
+}
+function changeQt(id,delta){
+  const it=carrinho.find(c=>c.prodId===id);if(!it)return;
+  const p=S.produtos.find(x=>x.id===id);
+  it.qt+=delta;
+  if(it.qt<=0)carrinho=carrinho.filter(c=>c.prodId!==id);
+  else if(it.qt>p.estoque){it.qt=p.estoque;toast('Estoque insuficiente','error')}
+  renderCart();
+}
+function renderCart(){
+  const box=document.getElementById('cartItems');
+  if(!carrinho.length){box.innerHTML='<div class="cart-empty">Toque em um produto<br>para iniciar a venda</div>'}
+  else box.innerHTML=carrinho.map(it=>`
+    <div class="cart-item">
+      <div class="ci-info"><strong>${it.emoji} ${it.nome}</strong><span>${fmtBR(it.preco)} cada</span></div>
+      <div class="ci-qty">
+        <button onclick="changeQt(${it.prodId},-1)">−</button>
+        <span style="font-weight:600">${it.qt}</span>
+        <button onclick="changeQt(${it.prodId},1)">+</button>
+      </div>
+      <div class="ci-price">${fmtBR(it.preco*it.qt)}</div>
+    </div>`).join('');
+  const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
+  document.getElementById('cartTotal').textContent=fmtBR(tot);
+  document.getElementById('cartCount').textContent=carrinho.reduce((s,i)=>s+i.qt,0)+' itens';
+}
+function esvaziarCarrinho(){carrinho=[];renderCart()}
+function finalizarVenda(){
+  if(!carrinho.length)return toast('Carrinho vazio','error');
+  const cidade=S.rota[hoje()]||'Sem cidade';
+  const total=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
+  const now=new Date();
+  S.vendas.push({
+    id:S.vendas.length+1,
+    data:hoje(),
+    hora:`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+    cidade,
+    itens:carrinho.map(c=>({prodId:c.prodId,nome:c.nome,qt:c.qt,preco:c.preco})),
+    total,
+    pagamento:pagamentoSel,
+    vendedor:'Jéssica'
+  });
+  // Baixa estoque
+  carrinho.forEach(c=>{
+    const p=S.produtos.find(x=>x.id===c.prodId);
+    if(p)p.estoque=Math.max(0,p.estoque-c.qt);
+  });
+  carrinho=[];
+  save();renderPdv();
+  toast(`Venda registrada: ${fmtBR(total)} ✅`,'success');
+}
+
+/* ================================================================
+   ROTA
+================================================================ */
+let weekOffset=0;
+function getWeekStart(off=0){
+  const d=new Date();const dow=d.getDay();
+  d.setDate(d.getDate()-dow+off*7);
+  return d;
+}
+function renderRota(){
+  const start=getWeekStart(weekOffset);
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d)}
+  document.getElementById('weekSub').textContent=`Semana de ${days[0].toLocaleDateString('pt-BR')} a ${days[6].toLocaleDateString('pt-BR')}`;
+  const hojeStr=hoje();
+  document.getElementById('routeWeek').innerHTML=days.map(d=>{
+    const key=d.toISOString().split('T')[0];
+    const cidade=S.rota[key]||'A definir';
+    const isToday=key===hojeStr;
+    const vendas=S.vendas.filter(v=>v.data===key);
+    const total=vendas.reduce((s,v)=>s+v.total,0);
+    return `<div class="route-day ${isToday?'today':''}">
+      <div class="day-name">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()]}</div>
+      <div class="day-num">${d.getDate()}</div>
+      <div class="day-city">📍 ${cidade}</div>
+      <div class="day-meta">${vendas.length?fmtBRk(total)+' · '+vendas.length+' vendas':'—'}</div>
+    </div>`;
+  }).join('');
+
+  // Sugestão de cidades
+  const cidStats={};
+  S.vendas.forEach(v=>{
+    if(!cidStats[v.cidade])cidStats[v.cidade]={total:0,visitas:new Set(),ult:null};
+    cidStats[v.cidade].total+=v.total;
+    cidStats[v.cidade].visitas.add(v.data);
+    if(!cidStats[v.cidade].ult||v.data>cidStats[v.cidade].ult)cidStats[v.cidade].ult=v.data;
+  });
+  const sug=Object.entries(cidStats).map(([c,d])=>{
+    const visitas=d.visitas.size;
+    const ticket=d.total/visitas;
+    const diasSemVisitar=d.ult?Math.round((new Date()-new Date(d.ult))/86400000):999;
+    const score=ticket*0.6+diasSemVisitar*15;
+    return {cidade:c,ticket,diasSemVisitar,score,visitas};
+  }).sort((a,b)=>b.score-a.score).slice(0,5);
+  document.getElementById('suggestCities').innerHTML=sug.map((s,i)=>`
+    <div class="city-rank">
+      <div class="rank-num">${i+1}</div>
+      <div><div class="name">${s.cidade}</div><div class="meta">${fmtBRk(s.ticket)}/dia · há ${s.diasSemVisitar}d sem visitar</div></div>
+      <div></div>
+      <div class="val">⭐ ${s.score.toFixed(0)}</div>
+    </div>`).join('');
+}
+function prevWeek(){weekOffset--;renderRota()}
+function nextWeek(){weekOffset++;renderRota()}
+
+function renderEditRota(){
+  const start=getWeekStart(weekOffset);
+  const html=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(d.getDate()+i);
+    const key=d.toISOString().split('T')[0];
+    html.push(`<div class="field" style="margin-bottom:10px"><label>${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()]} ${d.toLocaleDateString('pt-BR')}</label>
+      <select data-key="${key}">
+        <option value="">— A definir —</option>
+        ${S.cidades.map(c=>`<option ${S.rota[key]===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>`);
+  }
+  document.getElementById('editRotaBody').innerHTML=html.join('');
+}
+function salvarRota(){
+  document.querySelectorAll('#editRotaBody select').forEach(sel=>{
+    if(sel.value)S.rota[sel.dataset.key]=sel.value;
+    else delete S.rota[sel.dataset.key];
+  });
+  save();closeModal('modalEditRota');renderRota();toast('Rota atualizada','success');
+}
+
+function calcViabilidade(){
+  const km=+document.getElementById('calcKm').value;
+  const kml=+document.getElementById('calcKml').value;
+  const diesel=+document.getElementById('calcDiesel').value;
+  const fixo=+document.getElementById('calcFixo').value;
+  const pedagio=+document.getElementById('calcPedagio').value;
+  const margem=+document.getElementById('calcMargem').value/100;
+  const combust=(km/kml)*diesel;
+  const custoTotal=combust+fixo+pedagio;
+  const breakeven=custoTotal/margem;
+  const itens10=Math.ceil(breakeven/10);
+  document.getElementById('calcResult').innerHTML=`
+    <div class="alert-box info">
+      <span style="font-size:18px">📊</span>
+      <div>
+        <div style="margin-bottom:6px"><strong>Custo total do dia:</strong> ${fmtBR(custoTotal)} (combustível ${fmtBR(combust)} + fixo ${fmtBR(fixo)} + pedágio ${fmtBR(pedagio)})</div>
+        <div style="margin-bottom:6px"><strong>Ponto de equilíbrio (receita mínima):</strong> ${fmtBR(breakeven)}</div>
+        <div><strong>Você precisa vender:</strong> ~${itens10} produtos de R$10 para empatar (acima disso é lucro).</div>
+      </div>
+    </div>`;
+}
+
+/* ================================================================
+   CIDADES
+================================================================ */
+function renderCidades(){
+  const cidStats={};
+  S.vendas.forEach(v=>{
+    if(!cidStats[v.cidade])cidStats[v.cidade]={total:0,visitas:new Set(),ult:null,ticketSoma:0,ticketCt:0};
+    cidStats[v.cidade].total+=v.total;
+    cidStats[v.cidade].visitas.add(v.data);
+    cidStats[v.cidade].ticketSoma+=v.total;cidStats[v.cidade].ticketCt++;
+    if(!cidStats[v.cidade].ult||v.data>cidStats[v.cidade].ult)cidStats[v.cidade].ult=v.data;
+  });
+  const arr=Object.entries(cidStats).map(([c,d])=>({
+    cidade:c,total:d.total,visitas:d.visitas.size,ticket:d.ticketSoma/d.ticketCt,ult:d.ult
+  })).sort((a,b)=>b.total-a.total);
+
+  document.getElementById('cidTotal').textContent=arr.length;
+  document.getElementById('cidOuro').textContent=arr[0]?arr[0].cidade.split('/')[0]:'—';
+  document.getElementById('cidBurro').textContent=arr.length>3?arr[arr.length-1].cidade.split('/')[0]:'—';
+
+  const dsStats=[0,0,0,0,0,0,0],dsCt=[0,0,0,0,0,0,0];
+  S.vendas.forEach(v=>{const d=new Date(v.data+'T00:00:00').getDay();dsStats[d]+=v.total;dsCt[d]++});
+  const dsMed=dsStats.map((s,i)=>dsCt[i]?s/dsCt[i]:0);
+  const maxDay=dsMed.indexOf(Math.max(...dsMed));
+  document.getElementById('melhorDia').textContent=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][maxDay];
+
+  // Heatmap
+  const max=arr[0]?arr[0].total:1;
+  document.getElementById('heatGrid').innerHTML=arr.map(a=>{
+    const intensity=a.total/max;
+    const blue=Math.round(110+(160-110)*intensity*0.4);
+    const dark=Math.round(40+(40-15)*(1-intensity));
+    const bg=`rgb(${dark},${blue-30},${100+blue})`;
+    return `<div class="heat-cell" style="background:rgba(27,79,160,${0.3+intensity*0.7})">
+      <div class="h-name">${a.cidade.split('/')[0]}</div>
+      <div class="h-val">${fmtBRk(a.total)}</div>
+    </div>`;
+  }).join('');
+
+  // Tabela
+  document.getElementById('tabelaCidades').querySelector('tbody').innerHTML=arr.map((a,i)=>{
+    const trend=a.total>max*0.6?'<span class="badge b-green">↑ alta</span>':a.total>max*0.3?'<span class="badge b-blue">→ estável</span>':'<span class="badge b-red">↓ baixa</span>';
+    return `<tr>
+      <td><strong>${i+1}</strong></td>
+      <td><strong>${a.cidade}</strong></td>
+      <td>${a.visitas}</td>
+      <td><strong>${fmtBRk(a.total)}</strong></td>
+      <td>${fmtBR(a.ticket)}</td>
+      <td>${dataBR(a.ult)}</td>
+      <td>${trend}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="agendarCidade('${a.cidade}')">📅 Agendar</button></td>
+    </tr>`;
+  }).join('');
+}
+function agendarCidade(c){
+  weekOffset=1;openModal('modalEditRota');
+  setTimeout(()=>{const first=document.querySelector('#editRotaBody select');if(first){first.value=c}},100);
+  toast('Selecione o dia desejado','success');
+}
+
+/* ================================================================
+   DIÁRIO
+================================================================ */
+function renderDiario(){
+  const sel=document.getElementById('dCity');
+  sel.innerHTML=S.cidades.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('dDate').value=hoje();
+  const list=document.getElementById('diaryList');
+  list.innerHTML=S.diario.slice().reverse().map(e=>`
+    <div class="diary-card ${e.cat}">
+      <div class="diary-head"><span><strong>${e.cidade}</strong> · ${e.clima}</span><span>${dataBR(e.data)}</span></div>
+      <div class="diary-body">${e.texto}</div>
+    </div>`).join('')||'<div class="text-mute" style="padding:20px">Nenhuma entrada ainda</div>';
+}
+function salvarDiario(){
+  const txt=document.getElementById('dText').value.trim();
+  if(!txt)return toast('Escreva algo','error');
+  S.diario.push({
+    data:document.getElementById('dDate').value,
+    cidade:document.getElementById('dCity').value,
+    cat:document.getElementById('dCat').value,
+    clima:document.getElementById('dClima').value,
+    texto:txt
+  });
+  save();document.getElementById('dText').value='';renderDiario();
+  toast('Entrada salva no diário','success');
+}
+
+/* ================================================================
+   VENDAS
+================================================================ */
+function renderVendas(){
+  const mes=hoje().substring(0,7);
+  const vMes=S.vendas.filter(v=>v.data.startsWith(mes));
+  document.getElementById('vTotal').textContent=vMes.length;
+  const tot=vMes.reduce((s,v)=>s+v.total,0);
+  document.getElementById('vTicket').textContent=vMes.length?fmtBR(tot/vMes.length):'R$ 0';
+  // top item
+  const prodCount={};
+  vMes.forEach(v=>v.itens.forEach(it=>prodCount[it.nome]=(prodCount[it.nome]||0)+it.qt));
+  const topProd=Object.entries(prodCount).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('vTop').textContent=topProd?topProd[0]:'—';
+  // pix %
+  const pix=vMes.filter(v=>v.pagamento==='pix').length;
+  document.getElementById('vPix').textContent=vMes.length?(pix/vMes.length*100).toFixed(0)+'%':'0%';
+
+  // Pagamento
+  destroy('pag');
+  const pgStats={pix:0,dinheiro:0,cartao:0};
+  vMes.forEach(v=>pgStats[v.pagamento]=(pgStats[v.pagamento]||0)+v.total);
+  charts.pag=new Chart(document.getElementById('chartPagamento'),{
+    type:'doughnut',
+    data:{labels:['PIX','Dinheiro','Cartão'],datasets:[{data:[pgStats.pix,pgStats.dinheiro,pgStats.cartao],
+      backgroundColor:['#1B4FA0','#16A34A','#F59E0B']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}
+  });
+
+  // Hora
+  destroy('hora');
+  const horas=new Array(11).fill(0);
+  vMes.forEach(v=>{const h=+v.hora.split(':')[0];if(h>=9&&h<=19)horas[h-9]+=v.total});
+  charts.hora=new Chart(document.getElementById('chartHora'),{
+    type:'bar',
+    data:{labels:['9h','10h','11h','12h','13h','14h','15h','16h','17h','18h','19h'],
+      datasets:[{label:'Receita',data:horas,backgroundColor:'#1B4FA0',borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+
+  // Filtro
+  const sel=document.getElementById('filterCidadeVendas');
+  const cids=[...new Set(S.vendas.map(v=>v.cidade))];
+  sel.innerHTML='<option value="">Todas cidades</option>'+cids.map(c=>`<option>${c}</option>`).join('');
+  sel.onchange=renderTblVendas;
+  renderTblVendas();
+
+  function renderTblVendas(){
+    const f=sel.value;
+    let arr=S.vendas.slice().reverse();
+    if(f)arr=arr.filter(v=>v.cidade===f);
+    arr=arr.slice(0,50);
+    document.getElementById('tblVendas').querySelector('tbody').innerHTML=arr.map(v=>{
+      const pgIco={pix:'📱 PIX',dinheiro:'💵 Dinheiro',cartao:'💳 Cartão'}[v.pagamento]||v.pagamento;
+      return `<tr>
+        <td>${dataBR(v.data)} ${v.hora}</td>
+        <td>${v.cidade}</td>
+        <td>${v.itens.reduce((s,i)=>s+i.qt,0)} un</td>
+        <td><strong>${fmtBR(v.total)}</strong></td>
+        <td>${pgIco}</td>
+        <td>${v.vendedor}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+/* ================================================================
+   PRODUTOS
+================================================================ */
+function renderProdutos(){
+  const mes=hoje().substring(0,7);
+  const vendCt={};
+  S.vendas.filter(v=>v.data.startsWith(mes)).forEach(v=>v.itens.forEach(it=>vendCt[it.prodId]=(vendCt[it.prodId]||0)+it.qt));
+
+  document.getElementById('tblProdutos').querySelector('tbody').innerHTML=S.produtos.map(p=>{
+    const margem=((p.preco-p.custo)/p.preco*100).toFixed(0);
+    let stockBadge;
+    if(p.estoque<=0)stockBadge='<span class="badge b-red">Zerado</span>';
+    else if(p.estoque<=p.min)stockBadge=`<span class="badge b-yellow">Baixo: ${p.estoque}</span>`;
+    else stockBadge=`<span class="badge b-green">${p.estoque}</span>`;
+    return `<tr>
+      <td><strong>${p.emoji} ${p.nome}</strong></td>
+      <td><span class="badge b-blue">${p.cat}</span></td>
+      <td>${fmtBR(p.custo)}</td>
+      <td><strong>${fmtBR(p.preco)}</strong></td>
+      <td><span class="badge ${margem>50?'b-green':margem>30?'b-yellow':'b-red'}">${margem}%</span></td>
+      <td>${stockBadge}</td>
+      <td>${vendCt[p.id]||0}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="ajustarEstoque(${p.id})">📦</button></td>
+    </tr>`;
+  }).join('');
+
+  // Top produtos
+  destroy('topp');
+  const sorted=Object.entries(vendCt).map(([id,qt])=>({nome:S.produtos.find(p=>p.id==id)?.nome||'?',qt})).sort((a,b)=>b.qt-a.qt).slice(0,10);
+  charts.topp=new Chart(document.getElementById('chartTopProd'),{
+    type:'bar',
+    data:{labels:sorted.map(s=>s.nome),datasets:[{data:sorted.map(s=>s.qt),backgroundColor:'#1B4FA0',borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+
+  // Margem por categoria
+  destroy('marg');
+  const catMarg={};const catCt={};
+  S.produtos.forEach(p=>{
+    const m=(p.preco-p.custo)/p.preco*100;
+    catMarg[p.cat]=(catMarg[p.cat]||0)+m;catCt[p.cat]=(catCt[p.cat]||0)+1;
+  });
+  const labs=Object.keys(catMarg),vals=labs.map(c=>catMarg[c]/catCt[c]);
+  charts.marg=new Chart(document.getElementById('chartMargemCat'),{
+    type:'bar',
+    data:{labels:labs,datasets:[{data:vals,backgroundColor:'#F59E0B',borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v+'%'}}}}
+  });
+}
+function ajustarEstoque(id){
+  const p=S.produtos.find(x=>x.id===id);
+  const novo=prompt(`Ajustar estoque de "${p.nome}"\nAtual: ${p.estoque}\n\nDigite o novo valor:`,p.estoque);
+  if(novo!==null&&!isNaN(+novo)){p.estoque=+novo;save();renderProdutos();toast('Estoque atualizado','success')}
+}
+function salvarProduto(){
+  const p={
+    id:Math.max(0,...S.produtos.map(x=>x.id))+1,
+    nome:document.getElementById('npNome').value,
+    cat:document.getElementById('npCat').value,
+    emoji:document.getElementById('npEmoji').value||'🏷️',
+    custo:+document.getElementById('npCusto').value,
+    preco:+document.getElementById('npPreco').value,
+    estoque:+document.getElementById('npEstoque').value,
+    min:+document.getElementById('npMin').value,
+  };
+  if(!p.nome)return toast('Nome obrigatório','error');
+  S.produtos.push(p);save();closeModal('modalNovoProduto');renderProdutos();toast('Produto criado','success');
+}
+
+/* ================================================================
+   ESTOQUE
+================================================================ */
+function renderEstoque(){
+  document.getElementById('eValor').textContent=fmtBRk(S.produtos.reduce((s,p)=>s+p.estoque*p.custo,0));
+  document.getElementById('eSku').textContent=S.produtos.length;
+  document.getElementById('eBaixo').textContent=S.produtos.filter(p=>p.estoque>0&&p.estoque<=p.min).length;
+  document.getElementById('eZero').textContent=S.produtos.filter(p=>p.estoque<=0).length;
+
+  // Velocidade de venda (média 14 dias)
+  const inicio=hojeMinus(14);
+  const ventCt={};
+  S.vendas.filter(v=>v.data>=inicio).forEach(v=>v.itens.forEach(it=>ventCt[it.prodId]=(ventCt[it.prodId]||0)+it.qt));
+  const arr=S.produtos.map(p=>{
+    const vel=(ventCt[p.id]||0)/14;
+    const dias=vel>0?Math.round(p.estoque/vel):999;
+    const sugCompra=Math.max(0,Math.ceil(vel*30-p.estoque));
+    return {p,vel,dias,sugCompra};
+  }).sort((a,b)=>a.dias-b.dias);
+
+  document.getElementById('tblEstoque').querySelector('tbody').innerHTML=arr.map(({p,vel,dias,sugCompra})=>{
+    let status,statusClass;
+    if(p.estoque<=0){status='🚨 Zerado';statusClass='b-red'}
+    else if(dias<=3){status='⚠️ Crítico';statusClass='b-red'}
+    else if(p.estoque<=p.min){status='⏰ Baixo';statusClass='b-yellow'}
+    else{status='✅ OK';statusClass='b-green'}
+    return `<tr>
+      <td><strong>${p.emoji} ${p.nome}</strong></td>
+      <td>${p.estoque} un.</td>
+      <td>${vel.toFixed(1)}</td>
+      <td>${dias>99?'+99':dias} dias</td>
+      <td>${sugCompra>0?`<strong>${sugCompra} un.</strong>`:'—'}</td>
+      <td><span class="badge ${statusClass}">${status}</span></td>
+    </tr>`;
+  }).join('');
+}
+function gerarListaCompras(){
+  const inicio=hojeMinus(14);
+  const ventCt={};
+  S.vendas.filter(v=>v.data>=inicio).forEach(v=>v.itens.forEach(it=>ventCt[it.prodId]=(ventCt[it.prodId]||0)+it.qt));
+  const lista=S.produtos.map(p=>{
+    const vel=(ventCt[p.id]||0)/14;
+    const sug=Math.max(0,Math.ceil(vel*30-p.estoque));
+    return {p,sug};
+  }).filter(x=>x.sug>0);
+  if(!lista.length)return toast('Estoque está OK!','success');
+  let texto=`*🛒 LISTA DE COMPRAS — LOJÃO DA ECONOMIA*\nData: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+  let total=0;
+  lista.forEach(({p,sug})=>{
+    texto+=`▫️ ${p.nome} — *${sug} un.* (custo ~${fmtBR(sug*p.custo)})\n`;
+    total+=sug*p.custo;
+  });
+  texto+=`\n*TOTAL ESTIMADO: ${fmtBR(total)}*`;
+  const blob=new Blob([texto],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='lista-compras-'+hoje()+'.txt';a.click();
+  toast('Lista gerada e baixada','success');
+}
+
+/* ================================================================
+   CLIENTES
+================================================================ */
+function renderClientes(){
+  document.getElementById('cTotal').textContent=S.clientes.length;
+  document.getElementById('cVip').textContent=S.clientes.filter(c=>c.compras>=3).length;
+  document.getElementById('cWa').textContent=S.clientes.filter(c=>c.aceitaWa).length;
+
+  document.getElementById('tblClientes').querySelector('tbody').innerHTML=S.clientes.map(c=>`
+    <tr>
+      <td><strong>${c.nome}</strong> ${c.compras>=3?'<span class="badge b-purple">⭐ VIP</span>':''}</td>
+      <td>${c.cidade}</td>
+      <td>${c.wa}${c.aceitaWa?' <span class="badge b-green">✓</span>':''}</td>
+      <td>${c.compras}</td>
+      <td>${fmtBRk(c.gasto)}</td>
+      <td>${dataBR(c.ult)}</td>
+    </tr>`).join('');
+
+  document.getElementById('waCidade').innerHTML=S.cidades.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('ncCidade').innerHTML=S.cidades.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('waData').value=hoje();
+}
+function salvarCliente(){
+  S.clientes.push({
+    id:Math.max(0,...S.clientes.map(x=>x.id))+1,
+    nome:document.getElementById('ncNome').value,
+    wa:document.getElementById('ncWa').value,
+    cidade:document.getElementById('ncCidade').value,
+    aceitaWa:document.getElementById('ncAceitaWa').checked,
+    compras:0,gasto:0,ult:hoje()
+  });
+  save();closeModal('modalNovoCliente');renderClientes();toast('Cliente cadastrado','success');
+}
+function dispararWa(){
+  const cidade=document.getElementById('waCidade').value;
+  const data=dataBR(document.getElementById('waData').value);
+  const msg=document.getElementById('waMsg').value.replace('[DATA]',data);
+  const alvo=S.clientes.filter(c=>c.cidade===cidade&&c.aceitaWa);
+  if(!alvo.length)return toast('Nenhum cliente nessa cidade','error');
+  if(!confirm(`Será gerado ${alvo.length} link(s) WhatsApp. Cada um abre em nova aba — você dispara manual. Confirmar?`))return;
+  alvo.forEach((c,i)=>{
+    setTimeout(()=>{
+      window.open(`https://wa.me/55${c.wa}?text=${encodeURIComponent(msg)}`,'_blank');
+    },i*400);
+  });
+  toast(`Abrindo ${alvo.length} conversas WhatsApp`,'success');
+}
+
+/* ================================================================
+   FINANCEIRO
+================================================================ */
+function renderFinanceiro(){
+  const mes=hoje().substring(0,7);
+  const rec=S.vendas.filter(v=>v.data.startsWith(mes)).reduce((s,v)=>s+v.total,0);
+  const desp=S.despesas.filter(d=>d.data.startsWith(mes)).reduce((s,d)=>s+d.valor,0);
+  const lucro=rec-desp;
+  document.getElementById('fReceita').textContent=fmtBRk(rec);
+  document.getElementById('fDespesas').textContent=fmtBRk(desp);
+  document.getElementById('fLucro').textContent=fmtBRk(lucro);
+  document.getElementById('fMargem').textContent=rec?((lucro/rec)*100).toFixed(1)+'%':'0%';
+
+  // Rec x Desp 6 meses
+  destroy('rd');
+  const labels=[],recs=[],desps=[];
+  for(let i=5;i>=0;i--){
+    const dt=new Date();dt.setMonth(dt.getMonth()-i);
+    const k=dt.toISOString().substring(0,7);
+    labels.push(dt.toLocaleDateString('pt-BR',{month:'short'}));
+    recs.push(S.vendas.filter(v=>v.data.startsWith(k)).reduce((s,v)=>s+v.total,0));
+    desps.push(S.despesas.filter(d=>d.data.startsWith(k)).reduce((s,d)=>s+d.valor,0));
+  }
+  charts.rd=new Chart(document.getElementById('chartRecDesp'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Receita',data:recs,backgroundColor:'#16A34A',borderRadius:6},
+      {label:'Despesas',data:desps,backgroundColor:'#E94C5A',borderRadius:6}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>'R$'+v/1000+'k'}}}}
+  });
+
+  // Despesa por categoria
+  destroy('dc');
+  const catStats={};
+  S.despesas.filter(d=>d.data.startsWith(mes)).forEach(d=>catStats[d.cat]=(catStats[d.cat]||0)+d.valor);
+  charts.dc=new Chart(document.getElementById('chartDespCat'),{
+    type:'doughnut',
+    data:{labels:Object.keys(catStats),datasets:[{data:Object.values(catStats),
+      backgroundColor:['#E94C5A','#F59E0B','#1B4FA0','#16A34A','#8B5CF6','#06B6D4','#EC4899','#84CC16','#F97316','#64748B','#A78BFA']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}
+  });
+
+  // DRE
+  const dre=document.getElementById('dreBody');
+  const cmv=S.vendas.filter(v=>v.data.startsWith(mes)).reduce((s,v)=>s+v.itens.reduce((x,i)=>{
+    const p=S.produtos.find(p=>p.id===i.prodId);return x+(p?p.custo*i.qt:0);
+  },0),0);
+  const desCmv=Object.entries(catStats).filter(([k])=>!k.includes('Compra de produtos'));
+  dre.innerHTML=`
+    <tr><td><strong>RECEITA BRUTA</strong></td><td class="text-right"><strong style="color:var(--verde)">${fmtBR(rec)}</strong></td></tr>
+    <tr><td>(−) CMV (custo dos produtos vendidos)</td><td class="text-right">${fmtBR(cmv)}</td></tr>
+    <tr><td><strong>= LUCRO BRUTO</strong></td><td class="text-right"><strong>${fmtBR(rec-cmv)}</strong></td></tr>
+    ${desCmv.map(([k,v])=>`<tr><td>(−) ${k}</td><td class="text-right">${fmtBR(v)}</td></tr>`).join('')}
+    <tr><td><strong>= LUCRO LÍQUIDO</strong></td><td class="text-right"><strong style="color:${lucro>=0?'var(--verde)':'var(--coracao)'}">${fmtBR(lucro)}</strong></td></tr>
+    <tr><td><strong>Margem líquida</strong></td><td class="text-right"><strong>${rec?((lucro/rec)*100).toFixed(1):0}%</strong></td></tr>
+  `;
+}
+
+/* ================================================================
+   DESPESAS
+================================================================ */
+function renderDespesas(){
+  const sel=document.getElementById('ndCidade');
+  sel.innerHTML='<option value="">—</option>'+S.cidades.map(c=>`<option>${c}</option>`).join('');
+  const arr=S.despesas.slice().reverse().slice(0,80);
+  document.getElementById('tblDespesas').querySelector('tbody').innerHTML=arr.map((d,i)=>`
+    <tr>
+      <td>${dataBR(d.data)}</td>
+      <td>${d.cat}</td>
+      <td>${d.desc}</td>
+      <td>${d.cidade||'—'}</td>
+      <td><strong>${fmtBR(d.valor)}</strong></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="delDespesa(${S.despesas.indexOf(d)})">🗑️</button></td>
+    </tr>`).join('');
+}
+function delDespesa(idx){if(confirm('Excluir essa despesa?')){S.despesas.splice(idx,1);save();renderDespesas();toast('Despesa removida','success')}}
+function salvarDespesa(){
+  const desp={
+    data:document.getElementById('ndData').value,
+    cat:document.getElementById('ndCat').value,
+    desc:document.getElementById('ndDesc').value,
+    cidade:document.getElementById('ndCidade').value,
+    valor:+document.getElementById('ndValor').value
+  };
+  if(!desp.valor||!desp.desc)return toast('Preencha tudo','error');
+  S.despesas.push(desp);save();closeModal('modalNovaDespesa');renderDespesas();toast('Despesa lançada','success');
+}
+
+/* ================================================================
+   METAS
+================================================================ */
+function renderMetas(){
+  document.getElementById('mReceita').value=S.metas.receita;
+  document.getElementById('mVendas').value=S.metas.vendas;
+  document.getElementById('mMargem').value=S.metas.margem;
+
+  const mes=hoje().substring(0,7);
+  const rec=S.vendas.filter(v=>v.data.startsWith(mes)).reduce((s,v)=>s+v.total,0);
+  const desp=S.despesas.filter(d=>d.data.startsWith(mes)).reduce((s,d)=>s+d.valor,0);
+  const vendDia=S.vendas.filter(v=>v.data===hoje()).length;
+  const margem=rec?((rec-desp)/rec)*100:0;
+
+  function row(label,atual,meta,fmt){
+    const pct=Math.min(100,(atual/meta)*100);
+    return `<div style="margin-bottom:18px">
+      <div class="flex justify-between" style="margin-bottom:6px">
+        <strong>${label}</strong><span class="text-mute">${fmt(atual)} / ${fmt(meta)}</span>
+      </div>
+      <div class="progress" style="width:100%;height:10px"><div class="fill" style="width:${pct}%;background:${pct>=100?'var(--verde)':'var(--azul)'}"></div></div>
+      <div class="text-mute" style="font-size:11px;margin-top:4px">${pct.toFixed(0)}% atingido</div>
+    </div>`;
+  }
+  document.getElementById('metasProgress').innerHTML=
+    row('Receita do mês',rec,S.metas.receita,fmtBRk)+
+    row('Vendas hoje',vendDia,S.metas.vendas,v=>v+' vendas')+
+    row('Margem',margem,S.metas.margem,v=>v.toFixed(1)+'%');
+}
+function salvarMetas(){
+  S.metas={
+    receita:+document.getElementById('mReceita').value,
+    vendas:+document.getElementById('mVendas').value,
+    margem:+document.getElementById('mMargem').value
+  };
+  save();renderMetas();toast('Metas atualizadas','success');
+}
+
+/* ================================================================
+   EQUIPE
+================================================================ */
+function renderEquipe(){
+  const mes=hoje().substring(0,7);
+  document.getElementById('tblEquipe').querySelector('tbody').innerHTML=S.equipe.map(e=>{
+    const vendMes=S.vendas.filter(v=>v.data.startsWith(mes)&&v.vendedor===e.nome);
+    const recVend=vendMes.reduce((s,v)=>s+v.total,0);
+    const comissao=recVend*(e.com/100);
+    return `<tr>
+      <td><strong>${e.nome}</strong></td>
+      <td><span class="badge b-blue">${e.funcao}</span></td>
+      <td>${fmtBR(e.sal)}</td>
+      <td>${e.com}%</td>
+      <td>${vendMes.length} (${fmtBRk(recVend)})</td>
+      <td><strong>${fmtBR(e.sal+comissao)}</strong></td>
+    </tr>`;
+  }).join('');
+}
+function salvarMembro(){
+  S.equipe.push({
+    id:Math.max(0,...S.equipe.map(x=>x.id))+1,
+    nome:document.getElementById('nmNome').value,
+    funcao:document.getElementById('nmFuncao').value,
+    sal:+document.getElementById('nmSal').value,
+    com:+document.getElementById('nmCom').value,
+  });
+  save();closeModal('modalNovoMembro');renderEquipe();toast('Membro adicionado','success');
+}
+
+/* ================================================================
+   CAMINHÃO
+================================================================ */
+function renderCaminhao(){
+  document.getElementById('trKm').textContent=S.caminhao.km.toLocaleString('pt-BR')+' km';
+  const desp30=S.despesas.filter(d=>d.data>=hojeMinus(30)&&(d.cat.includes('Combustível')||d.cat.includes('Manutenção'))).reduce((s,d)=>s+d.valor,0);
+  // estimativa 600km/sem * 4 semanas = 2400km
+  document.getElementById('trCusto').textContent='R$ '+(desp30/2400).toFixed(2);
+  document.getElementById('trRev').textContent='em '+(S.caminhao.proxRevisao-S.caminhao.km).toLocaleString('pt-BR')+' km';
+
+  document.getElementById('tblManut').querySelector('tbody').innerHTML=S.manutencoes.slice().reverse().map(m=>`
+    <tr>
+      <td>${dataBR(m.data)}</td><td>${m.tipo}</td>
+      <td>${m.km.toLocaleString('pt-BR')} km</td>
+      <td><strong>${fmtBR(m.custo)}</strong></td>
+    </tr>`).join('');
+
+  // Combustível últimos 30 dias
+  destroy('comb');
+  const labels=[],comb=[];
+  for(let i=29;i>=0;i--){const d=hojeMinus(i);labels.push(dataBR(d).substring(0,5));
+    comb.push(S.despesas.filter(x=>x.data===d&&x.cat.includes('Combustível')).reduce((s,x)=>s+x.valor,0));
+  }
+  charts.comb=new Chart(document.getElementById('chartCombustivel'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Diesel',data:comb,backgroundColor:'#1B4FA0',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+}
+function salvarManutencao(){
+  S.manutencoes.push({
+    data:document.getElementById('mmData').value,
+    tipo:document.getElementById('mmTipo').value,
+    km:+document.getElementById('mmKm').value,
+    custo:+document.getElementById('mmCusto').value
+  });
+  // Lança como despesa
+  S.despesas.push({
+    data:document.getElementById('mmData').value,
+    cat:'🔧 Manutenção',
+    desc:document.getElementById('mmTipo').value,
+    cidade:'',
+    valor:+document.getElementById('mmCusto').value
+  });
+  save();closeModal('modalNovaManut');renderCaminhao();toast('Manutenção registrada','success');
+}
+
+/* ================================================================
+   EXPORTAR
+================================================================ */
+function exportarTudo(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='lojao-backup-'+hoje()+'.json';a.click();
+  toast('Backup baixado','success');
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+renderDash();
+</script>
+
+</body>
+</html>
