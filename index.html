@@ -628,6 +628,30 @@
   .scanner-bar.flash-err{animation:flashErr .5s}
   @keyframes flashOk{0%{box-shadow:0 0 0 0 rgba(22,163,74,.7)}100%{box-shadow:0 6px 20px rgba(27,79,160,.25)}}
   @keyframes flashErr{0%,50%{background:linear-gradient(135deg,#7F1D1D,#B91C1C)}100%{background:linear-gradient(135deg,#0E2A5C,#1B4FA0)}}
+
+  /* ============ MENU MOBILE ============ */
+  .hamburger{display:none;background:var(--cinza-card);border:1px solid var(--cinza-borda);border-radius:10px;
+    width:42px;height:42px;font-size:20px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;color:var(--cinza-texto)}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:999}
+  @media(max-width:820px){
+    .hamburger{display:flex}
+    aside.sidebar{position:fixed;left:0;top:0;bottom:0;width:262px;z-index:1000;
+      transform:translateX(-100%);transition:transform .25s ease;box-shadow:4px 0 24px rgba(0,0,0,.3)}
+    aside.sidebar.open{transform:translateX(0)}
+    .sidebar-backdrop.show{display:block}
+    header.topbar{padding:0 14px;gap:12px;height:60px}
+    .city-today{display:none}
+    .page-title h2{font-size:17px}
+    .page-title p{display:none}
+    .scroll-area{padding:16px 14px !important}
+    .panel{padding:14px}
+    .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+    .scanner-bar #pdvBarcode{font-size:16px}
+    .modal{max-width:94vw}
+    .pay-buttons{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:430px){ .kpi-grid{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -716,6 +740,7 @@
   <!-- ============================ MAIN ============================ -->
   <main class="content">
     <header class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
       <div class="page-title">
         <h2 id="pageTitle">Visão Geral</h2>
         <p id="pageSub">Painel completo do negócio — em tempo real</p>
@@ -733,6 +758,7 @@
       </div>
     </header>
 
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
     <div class="scroll-area">
 
       <!-- ============================ DASHBOARD ============================ -->
@@ -1720,7 +1746,7 @@
    ESTADO + PERSISTÊNCIA
 ================================================================ */
 const STORE_KEY='lojaoEconomia_v4';
-const APP_VERSION='v8 · 03/06/2026';
+const APP_VERSION='v9 · 03/06/2026';
 /* Força baixar a versão mais recente, contornando o cache (funciona no celular) */
 function forcarAtualizacao(){
   location.href=location.pathname+'?v='+Date.now();
@@ -2341,7 +2367,15 @@ function renderConfig(){
     '</div></div>';
 }
 function goEstoque(u){goPage('estoque',u);}
-document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>goPage(n.dataset.page,n.dataset.unidade)));
+document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>{goPage(n.dataset.page,n.dataset.unidade);fecharSidebar();}));
+function toggleSidebar(){
+  const sb=document.querySelector('.sidebar'),bd=document.getElementById('sidebarBackdrop');
+  const open=sb.classList.toggle('open');bd.classList.toggle('show',open);
+}
+function fecharSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
 
 /* ================================================================
    UI HELPERS
