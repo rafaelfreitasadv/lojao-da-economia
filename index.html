@@ -965,8 +965,15 @@
                   <label>Parcelas (até 10x sem juros)</label>
                   <select id="pdvParcelas" onchange="renderCart()"></select>
                 </div>
+                <div id="trocoWrap" style="display:none;margin-bottom:10px">
+                  <div class="field"><label>Valor recebido (R$)</label><input type="number" id="pdvRecebido" step="0.01" placeholder="0,00" oninput="renderTroco()"/></div>
+                  <div class="flex justify-between" style="font-size:14px;padding:6px 2px"><span class="text-mute">Troco</span><strong id="pdvTroco" style="color:var(--verde)">R$ 0,00</strong></div>
+                </div>
                 <button class="btn btn-success" style="width:100%;justify-content:center;padding:12px" onclick="finalizarVenda()">✅ Finalizar Venda</button>
-                <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px" onclick="esvaziarCarrinho()">🗑️ Cancelar</button>
+                <div class="flex gap-12" style="margin-top:6px">
+                  <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="esvaziarCarrinho()">🗑️ Cancelar</button>
+                  <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="imprimirCupom()">🧾 Último cupom</button>
+                </div>
               </div>
             </div>
           </div>
@@ -2529,12 +2536,22 @@ document.querySelectorAll('.pay-btn[data-pay]').forEach(b=>b.addEventListener('c
   document.querySelectorAll('.pay-btn[data-pay]').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');pagamentoSel=b.dataset.pay;
   document.getElementById('parcelasWrap').style.display=pagamentoSel==='cartao'?'block':'none';
+  document.getElementById('trocoWrap').style.display=pagamentoSel==='dinheiro'?'block':'none';
   if(pagamentoSel==='cartao'){
     const sel=document.getElementById('pdvParcelas');const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
     sel.innerHTML=Array.from({length:10},(_,i)=>{const n=i+1;return `<option value="${n}">${n}x de ${fmtBR(tot/n)} ${n===1?'(à vista)':'sem juros'}</option>`}).join('');
   }
+  if(pagamentoSel==='dinheiro'){document.getElementById('pdvRecebido').value='';renderTroco();}
   renderCart();
 }));
+function renderTroco(){
+  const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
+  const rec=+document.getElementById('pdvRecebido').value||0;
+  const troco=rec-tot;
+  const el=document.getElementById('pdvTroco');
+  el.textContent=fmtBR(Math.max(0,troco));
+  el.style.color=troco<0?'var(--vermelho)':'var(--verde)';
+}
 
 function addCart(id){
   const p=S.produtos.find(x=>x.id===id);if(!p||estLoc(p,localPdv)<=0)return toast('Sem estoque nesta unidade','error');
@@ -2581,29 +2598,61 @@ function finalizarVenda(){
   const cidade=LOCAIS[localPdv].tipo==='caminhao'?(S.rota[hoje()]||'Sem cidade'):LOCAIS[localPdv].nome;
   const total=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
   const parcelas=pagamentoSel==='cartao'?(+document.getElementById('pdvParcelas').value||1):1;
+  const recebido=pagamentoSel==='dinheiro'?(+document.getElementById('pdvRecebido').value||0):0;
+  const troco=pagamentoSel==='dinheiro'&&recebido>total?recebido-total:0;
   const now=new Date();
-  S.vendas.push({
+  const venda={
     id:S.vendas.length+1,
     data:hoje(),
     hora:`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
     local:localPdv,
     cidade,
-    itens:carrinho.map(c=>({prodId:c.prodId,nome:c.nome,qt:c.qt,preco:c.preco})),
+    itens:carrinho.map(c=>({prodId:c.prodId,nome:c.nome,qt:c.qt,preco:c.preco,emoji:c.emoji})),
     total,
-    pagamento:pagamentoSel,parcelas,
+    pagamento:pagamentoSel,parcelas,recebido,troco,
     vendedor:CURRENT?CURRENT.nome:'Caixa'
-  });
+  };
+  S.vendas.push(venda);
+  ultimaVenda=venda;
   // Baixa estoque do LOCAL onde a venda aconteceu
   carrinho.forEach(c=>{
     const p=S.produtos.find(x=>x.id===c.prodId);
     if(p){garanteEstoque(p);p.estoque[localPdv]=Math.max(0,(p.estoque[localPdv]||0)-c.qt);}
   });
   carrinho=[];
+  document.getElementById('trocoWrap').style.display='none';
   save();renderPdv();
   const msgParc=pagamentoSel==='cartao'&&parcelas>1?` em ${parcelas}x`:'';
-  toast(`Venda ${LOCAIS[localPdv].emoji} registrada: ${fmtBR(total)}${msgParc} ✅`,'success');
+  const msgTroco=troco>0?` · troco ${fmtBR(troco)}`:'';
+  toast(`Venda ${LOCAIS[localPdv].emoji} registrada: ${fmtBR(total)}${msgParc}${msgTroco} ✅`,'success');
   scanMsg('🟢 Venda concluída! Pronto para a próxima — passe o produto no leitor','flash-ok');
   setTimeout(focusBarcode,60);
+}
+let ultimaVenda=null;
+function imprimirCupom(){
+  if(!ultimaVenda)return toast('Nenhuma venda recente para imprimir','error');
+  const v=ultimaVenda;
+  const pg={pix:'PIX',dinheiro:'Dinheiro',cartao:'Cartão'+(v.parcelas>1?' '+v.parcelas+'x':'')}[v.pagamento]||v.pagamento;
+  const linhas=v.itens.map(i=>`<tr><td>${i.qt}x ${i.nome}</td><td style="text-align:right">${fmtBR(i.preco*i.qt)}</td></tr>`).join('');
+  const extra=v.pagamento==='dinheiro'&&v.recebido?`<div class="flex" style="justify-content:space-between"><span>Recebido</span><span>${fmtBR(v.recebido)}</span></div><div class="flex" style="justify-content:space-between"><span>Troco</span><span>${fmtBR(v.troco)}</span></div>`:'';
+  const w=window.open('','_blank','width=380,height=600');
+  w.document.write(`<html><head><title>Cupom</title><meta charset="utf-8"><style>
+    body{font-family:'Courier New',monospace;color:#000;max-width:300px;margin:0 auto;padding:10px;font-size:12px}
+    h2{text-align:center;margin:4px 0;font-size:15px}.c{text-align:center}.flex{display:flex}
+    table{width:100%;border-collapse:collapse;margin:6px 0}td{padding:2px 0}
+    .tot{border-top:1px dashed #000;margin-top:6px;padding-top:6px;font-size:14px;font-weight:bold}
+    @media print{button{display:none}}
+  </style></head><body>
+    <h2>📦 LOJÃO DA ECONOMIA</h2>
+    <div class="c">${LOCAIS[v.local].nome}<br>${dataBR(v.data)} ${v.hora} · ${v.vendedor}</div>
+    <div style="border-top:1px dashed #000;margin:6px 0"></div>
+    <table>${linhas}</table>
+    <div class="flex tot" style="justify-content:space-between"><span>TOTAL</span><span>${fmtBR(v.total)}</span></div>
+    <div style="margin-top:4px">Pagamento: ${pg}</div>${extra}
+    <div class="c" style="margin-top:10px">Obrigado pela preferência! ❤️</div>
+    <div class="c" style="margin-top:14px"><button onclick="window.print()" style="padding:8px 16px">🖨️ Imprimir</button></div>
+  </body></html>`);
+  w.document.close();
 }
 
 /* ================================================================
