@@ -1746,10 +1746,26 @@
    ESTADO + PERSISTÊNCIA
 ================================================================ */
 const STORE_KEY='lojaoEconomia_v4';
-const APP_VERSION='v9 · 03/06/2026';
+const APP_VERSION='v10 · 03/06/2026';
 /* Força baixar a versão mais recente, contornando o cache (funciona no celular) */
 function forcarAtualizacao(){
+  try{Object.keys(sessionStorage).filter(k=>k.startsWith('upd_')).forEach(k=>sessionStorage.removeItem(k));}catch(e){}
   location.href=location.pathname+'?v='+Date.now();
+}
+/* AUTO-ATUALIZAÇÃO: compara com version.txt no servidor e recarrega a versão nova sozinho */
+async function checarAtualizacao(){
+  if(!location.protocol.startsWith('http'))return; // só no servidor (evita erro em arquivo local)
+  try{
+    const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const latest=(await r.text()).trim();
+    if(latest && latest!==APP_VERSION){
+      const flag='upd_'+latest;
+      if(sessionStorage.getItem(flag))return; // já tentou nesta sessão — evita loop
+      sessionStorage.setItem(flag,'1');
+      location.href=location.pathname+'?v='+Date.now();
+    }
+  }catch(e){}
 }
 
 /* ================================================================
@@ -3352,7 +3368,7 @@ function renderAlimentar(){
         <div class="form-grid">
           <div class="field"><label>Data</label><input type="date" id="al_data" value="${hoje()}"/></div>
           <div class="field"><label>Produto</label>
-            <select id="al_prod" onchange="document.getElementById('al_novo_wrap').style.display=this.value==='__novo__'?'grid':'none'">
+            <select id="al_prod" onchange="alimentarProdSel(this.value)">
               <option value="__novo__">➕ Produto novo</option>
               ${S.produtos.map(p=>`<option value="${p.id}">${p.emoji} ${p.nome}</option>`).join('')}
             </select>
@@ -3404,6 +3420,16 @@ function renderAlimentar(){
     </div>`;
   document.getElementById('al_novo_wrap').style.display='grid';
 }
+function alimentarProdSel(val){
+  document.getElementById('al_novo_wrap').style.display=val==='__novo__'?'grid':'none';
+  if(val==='__novo__'){
+    document.getElementById('al_custo').value='5.00';
+    document.getElementById('al_preco').value='10.00';
+  }else{
+    const p=S.produtos.find(x=>x.id===+val);
+    if(p){document.getElementById('al_custo').value=p.custo;document.getElementById('al_preco').value=p.preco;}
+  }
+}
 function previewAnexo(input,tipo){
   const file=input.files[0];if(!file)return;
   lerImagemRedim(file,tipo==='foto'?500:900,dataUrl=>{
@@ -3426,7 +3452,7 @@ function salvarEntrada(){
     if(!nome)return toast('Dê um nome ao produto novo','error');
     // não duplica: se já existe produto com mesmo nome, reusa
     const existente=S.produtos.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
-    if(existente){prod=existente;garanteEstoque(prod);prod.custo=custo;prod.preco=preco;if(alimentarFoto)prod.foto=alimentarFoto;}
+    if(existente){prod=existente;garanteEstoque(prod);if(alimentarFoto)prod.foto=alimentarFoto;/* mantém o preço atual — não reseta */}
     else{
       prod={
         id:Math.max(0,...S.produtos.map(x=>x.id))+1,
@@ -4000,6 +4026,7 @@ function iniciarApp(){
 }
 setCloudBadge(false);
 try{document.getElementById('loginVersao').textContent='Versão '+APP_VERSION;}catch(e){}
+checarAtualizacao();
 cloudInit(()=>{ iniciarApp(); });
 </script>
 
