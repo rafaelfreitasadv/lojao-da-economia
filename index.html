@@ -1189,9 +1189,10 @@
       <section class="page" id="page-produtos">
         <div class="panel">
           <div class="panel-head">
-            <div><div class="panel-title"><span class="ico">🏷️</span> Catálogo de produtos</div><div class="panel-sub">Padrão R$10. Marque ⭐ para produtos de preço variável</div></div>
+            <div><div class="panel-title"><span class="ico">🏷️</span> Catálogo de produtos</div><div class="panel-sub">Busque, edite (✏️) ou exclua (🗑️) qualquer produto</div></div>
             <div class="panel-actions">
-              <button class="btn btn-primary btn-sm" onclick="openModal('modalNovoProduto')">+ Novo produto</button>
+              <input type="text" id="prodSearch" placeholder="🔎 Buscar por nome ou código…" autocomplete="off" oninput="filtrarProdutos(this.value)" style="padding:8px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:13px;min-width:200px"/>
+              <button class="btn btn-primary btn-sm" onclick="novoProduto()">+ Novo produto</button>
             </div>
           </div>
           <div class="scroll-x">
@@ -1750,7 +1751,7 @@
    ESTADO + PERSISTÊNCIA
 ================================================================ */
 const STORE_KEY='lojaoEconomia_v4';
-const APP_VERSION='v14 · 03/06/2026';
+const APP_VERSION='v15 · 03/06/2026';
 /* Força baixar a versão mais recente, contornando o cache (funciona no celular) */
 function forcarAtualizacao(){
   try{Object.keys(sessionStorage).filter(k=>k.startsWith('upd_')).forEach(k=>sessionStorage.removeItem(k));}catch(e){}
@@ -3211,12 +3212,15 @@ function renderProdutos(){
     if(n<=min)return `<span class="badge b-yellow">${n}</span>`;
     return `<span class="badge b-green">${n}</span>`;
   }
+  const buscaAnterior=(document.getElementById('prodSearch')||{}).value||'';
+  const ehGestor=!CURRENT||CURRENT.role!=='caixa';
   document.getElementById('tblProdutos').querySelector('tbody').innerHTML=S.produtos.map(p=>{
     garanteEstoque(p);
     const l1=estLoc(p,'loja1'),l2=estLoc(p,'loja2'),cam=estLoc(p,'caminhao');
     const fotoTd=p.foto?`<img src="${p.foto}" style="width:26px;height:26px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:6px"/>`:`${p.emoji} `;
     const cell=(n,u)=>`${stkBadge(n,p.min)} <button class="btn btn-ghost btn-sm" style="padding:2px 5px" onclick="ajustarEstoque(${p.id},'${u}')" title="Ajustar">✏️</button>`;
-    return `<tr>
+    const busca=((p.nome||'')+' '+(p.codBarras||'')).toLowerCase().replace(/"/g,'');
+    return `<tr data-busca="${busca}">
       <td><strong>${fotoTd}${p.nome}</strong></td>
       <td style="font-size:11px;color:var(--cinza-mute)">${p.codBarras||'—'}</td>
       <td>${fmtBR(p.custo)}</td>
@@ -3226,9 +3230,14 @@ function renderProdutos(){
       <td>${cell(cam,'caminhao')}</td>
       <td><strong>${l1+l2+cam}</strong></td>
       <td>${vendCt[p.id]||0}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="trocarFoto(${p.id})">📷</button></td>
+      <td style="white-space:nowrap">
+        ${ehGestor?`<button class="btn btn-ghost btn-sm" title="Editar produto" onclick="editarProduto(${p.id})">✏️</button>`:''}
+        <button class="btn btn-ghost btn-sm" title="Foto" onclick="trocarFoto(${p.id})">📷</button>
+        ${ehGestor?`<button class="btn btn-ghost btn-sm" title="Excluir" onclick="excluirProduto(${p.id})">🗑️</button>`:''}
+      </td>
     </tr>`;
   }).join('');
+  if(buscaAnterior){const se=document.getElementById('prodSearch');if(se){se.value=buscaAnterior;filtrarProdutos(buscaAnterior);}}
 
   // Top produtos
   destroy('topp');
@@ -3271,23 +3280,79 @@ function trocarFoto(id){
   });
   inp.click();
 }
+/* busca por nome ou código de barras na lista de produtos */
+function filtrarProdutos(q){
+  q=(q||'').trim().toLowerCase();
+  document.querySelectorAll('#tblProdutos tbody tr').forEach(tr=>{
+    tr.style.display=(!q||(tr.dataset.busca||'').includes(q))?'':'none';
+  });
+}
+let editProdutoId=null;
+function novoProduto(){
+  editProdutoId=null;
+  document.querySelector('#modalNovoProduto .modal-head h3').textContent='Novo Produto';
+  document.getElementById('npNome').value='';
+  document.getElementById('npEmoji').value='🏷️';
+  document.getElementById('npCusto').value='4.50';
+  document.getElementById('npPreco').value='10.00';
+  document.getElementById('npCB').value='';
+  document.getElementById('npMin').value='10';
+  document.getElementById('npEstL1').value='0';
+  document.getElementById('npEstL2').value='0';
+  document.getElementById('npEstCam').value='0';
+  document.getElementById('npFoto').value='';
+  openModal('modalNovoProduto');
+}
+function editarProduto(id){
+  const p=S.produtos.find(x=>x.id===id);if(!p)return;
+  garanteEstoque(p);
+  editProdutoId=id;
+  document.querySelector('#modalNovoProduto .modal-head h3').textContent='Editar Produto';
+  document.getElementById('npNome').value=p.nome;
+  const selCat=document.getElementById('npCat');
+  if(![...selCat.options].some(o=>o.value===p.cat||o.textContent===p.cat)){const o=document.createElement('option');o.textContent=p.cat;selCat.appendChild(o);}
+  selCat.value=p.cat;
+  document.getElementById('npEmoji').value=p.emoji||'🏷️';
+  document.getElementById('npCusto').value=p.custo;
+  document.getElementById('npPreco').value=p.preco;
+  document.getElementById('npCB').value=p.codBarras||'';
+  document.getElementById('npMin').value=p.min;
+  document.getElementById('npEstL1').value=p.estoque.loja1;
+  document.getElementById('npEstL2').value=p.estoque.loja2;
+  document.getElementById('npEstCam').value=p.estoque.caminhao;
+  document.getElementById('npFoto').value='';
+  openModal('modalNovoProduto');
+}
+function excluirProduto(id){
+  const p=S.produtos.find(x=>x.id===id);if(!p)return;
+  if(CURRENT&&CURRENT.role==='caixa')return toast('Apenas gestores podem excluir produtos','error');
+  if(!confirm('Excluir o produto "'+p.nome+'"?\n\nO histórico de vendas é mantido — só sai do catálogo e do estoque.'))return;
+  S.produtos=S.produtos.filter(x=>x.id!==id);
+  save();renderProdutos();toast('Produto excluído','success');
+}
 function salvarProduto(){
-  const nome=document.getElementById('npNome').value;
+  const nome=document.getElementById('npNome').value.trim();
   if(!nome)return toast('Nome obrigatório','error');
   lerImagemRedim(document.getElementById('npFoto').files[0],500,foto=>{
-    S.produtos.push({
-      id:Math.max(0,...S.produtos.map(x=>x.id))+1,
+    const dados={
       nome,
       cat:document.getElementById('npCat').value,
       emoji:document.getElementById('npEmoji').value||'🏷️',
-      custo:+document.getElementById('npCusto').value,
-      preco:+document.getElementById('npPreco').value,
+      custo:+document.getElementById('npCusto').value||0,
+      preco:+document.getElementById('npPreco').value||0,
       codBarras:document.getElementById('npCB').value.trim(),
-      estoque:{loja1:+document.getElementById('npEstL1').value,loja2:+document.getElementById('npEstL2').value,caminhao:+document.getElementById('npEstCam').value},
-      min:+document.getElementById('npMin').value,
-      foto:foto||''
-    });
-    save();closeModal('modalNovoProduto');renderProdutos();toast('Produto criado','success');
+      min:+document.getElementById('npMin').value||0,
+      estoque:{loja1:+document.getElementById('npEstL1').value||0,loja2:+document.getElementById('npEstL2').value||0,caminhao:+document.getElementById('npEstCam').value||0}
+    };
+    if(editProdutoId){
+      const p=S.produtos.find(x=>x.id===editProdutoId);
+      if(p){Object.assign(p,dados);if(foto)p.foto=foto;}
+      editProdutoId=null;
+      save();closeModal('modalNovoProduto');renderProdutos();toast('Produto atualizado ✅','success');
+    }else{
+      S.produtos.push({id:Math.max(0,...S.produtos.map(x=>x.id),0)+1,...dados,foto:foto||''});
+      save();closeModal('modalNovoProduto');renderProdutos();toast('Produto criado','success');
+    }
   });
 }
 
@@ -3304,16 +3369,23 @@ function switchEstTab(tab,el){
 }
 
 function renderEstoque(unidade){
-  const local=unidade||estUnidade;estUnidade=local;
+  const local=unidade||estUnidade;
+  const trocouUnidade=(local!==estUnidade);
+  estUnidade=local;
   const emoji=LOCAIS[local].emoji, nome=LOCAIS[local].nome;
   document.getElementById('pageTitle').textContent='Estoque — '+nome+' '+emoji;
   document.getElementById('pageSub').textContent='Posição do estoque + alimentar estoque';
-  // reset tab para "lista"
-  document.getElementById('estTabLista').classList.add('active');
-  document.getElementById('estTabAlimentar').classList.remove('active');
-  document.getElementById('est-alimentar').style.display='none';
+  // BLINDAGEM: se a pessoa está na aba "Alimentar Estoque" desta mesma unidade,
+  // NÃO mexe nas abas nem no formulário dela — só atualiza a lista em segundo plano.
+  const alimentarAberto=document.getElementById('est-alimentar').style.display!=='none';
+  if(!alimentarAberto||trocouUnidade){
+    document.getElementById('estTabLista').classList.add('active');
+    document.getElementById('estTabAlimentar').classList.remove('active');
+    document.getElementById('est-alimentar').style.display='none';
+    document.getElementById('est-lista').style.display='block';
+  }
+  const buscaAnterior=(document.getElementById('estSearch')||{}).value||'';
   const cont=document.getElementById('est-lista');
-  cont.style.display='block';
 
   const valor=S.produtos.reduce((s,p)=>s+estLoc(p,local)*p.custo,0);
   const itens=S.produtos.reduce((s,p)=>s+estLoc(p,local),0);
@@ -3343,6 +3415,7 @@ function renderEstoque(unidade){
       <div class="panel-head">
         <div><div class="panel-title">${emoji} Posição & reposição — ${nome}</div><div class="panel-sub">Velocidade calculada pelas vendas deste local</div></div>
         <div class="panel-actions">
+          <input type="text" id="estSearch" placeholder="🔎 Buscar produto…" autocomplete="off" oninput="filtrarEstoque(this.value)" style="padding:8px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:13px;min-width:180px"/>
           <button class="btn btn-primary btn-sm" onclick="gerarListaCompras('${local}')">🧾 Lista de compras</button>
         </div>
       </div>
@@ -3356,7 +3429,8 @@ function renderEstoque(unidade){
             else if(est<=p.min){status='⏰ Baixo';sc='b-yellow'}
             else{status='✅ OK';sc='b-green'}
             const img=p.foto?`<img src="${p.foto}" style="width:24px;height:24px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:6px"/>`:`${p.emoji} `;
-            return `<tr>
+            const busca=((p.nome||'')+' '+(p.codBarras||'')).toLowerCase().replace(/"/g,'');
+            return `<tr data-busca="${busca}">
               <td><strong>${img}${p.nome}</strong></td>
               <td><strong>${est}</strong> un.</td>
               <td>${vel.toFixed(1)}</td>
@@ -3368,6 +3442,15 @@ function renderEstoque(unidade){
         </table>
       </div>
     </div>`;
+  // preserva a busca digitada mesmo quando a lista atualiza em tempo real
+  if(buscaAnterior){const se=document.getElementById('estSearch');if(se){se.value=buscaAnterior;filtrarEstoque(buscaAnterior);}}
+}
+/* busca por nome ou código de barras na lista de estoque (filtra sem recarregar) */
+function filtrarEstoque(q){
+  q=(q||'').trim().toLowerCase();
+  document.querySelectorAll('#est-lista table tbody tr').forEach(tr=>{
+    tr.style.display=(!q||(tr.dataset.busca||'').includes(q))?'':'none';
+  });
 }
 
 let alimentarFoto='',alimentarNF='';
