@@ -1,0 +1,44 @@
+<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t">
+  <title id="t">Post Instagram — Oferta da Semana</title>
+  <defs>
+    <path id="heart" d="M16 28 C16 28 3 19.5 3 10.7 C3 6.2 6.2 3.2 10 3.2 C12.7 3.2 15 4.9 16 7.2 C17 4.9 19.3 3.2 22 3.2 C25.8 3.2 29 6.2 29 10.7 C29 19.5 16 28 16 28 Z" fill="#FFFFFF"/>
+    <g id="logo">
+      <circle cx="250" cy="250" r="216" fill="#F6E7DC" stroke="#163A9E" stroke-width="7"/>
+      <circle cx="250" cy="250" r="199" fill="none" stroke="#163A9E" stroke-width="2.5"/>
+      <g transform="translate(250 250) scale(1.25) translate(-250 -237)">
+        <ellipse cx="250" cy="328" rx="86" ry="13" fill="#163A9E" opacity="0.10"/>
+        <polygon points="190,232 250,204 232,168 168,194" fill="#3358CC"/>
+        <polygon points="250,204 310,232 332,194 268,168" fill="#3358CC"/>
+        <polygon points="190,232 250,204 310,232 250,260" fill="#102A75"/>
+        <polygon points="190,232 250,260 250,320 190,292" fill="#163A9E"/>
+        <polygon points="250,260 310,232 310,292 250,320" fill="#1F46BE"/>
+        <g transform="translate(175,137) rotate(-12 21 21)"><rect width="42" height="42" rx="12" fill="#F8485E"/><use href="#heart" transform="translate(7.98,8.38) scale(0.814)"/></g>
+        <g transform="translate(286,145) rotate(12 19 19)"><rect width="38" height="38" rx="11" fill="#F8485E"/><use href="#heart" transform="translate(7.22,7.59) scale(0.736)"/></g>
+        <g transform="translate(217,144)"><rect width="66" height="66" rx="18" fill="#F8485E"/><use href="#heart" transform="translate(12.54,13.18) scale(1.279)"/></g>
+      </g>
+    </g>
+  </defs>
+
+  <!-- Fundo -->
+  <rect width="1080" height="1080" fill="#1B40B3"/>
+  <!-- Corações decorativos -->
+  <use href="#heart" transform="translate(-30 -10) scale(7)" opacity="0.06"/>
+  <use href="#heart" transform="translate(880 920) scale(8)" opacity="0.06"/>
+
+  <!-- Logo -->
+  <use href="#logo" transform="translate(465 60) scale(0.30)"/>
+  <text x="540" y="258" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="30" font-weight="700" fill="#F6E7DC" letter-spacing="8">LOJÃO DA ECONOMIA</text>
+
+  <!-- Card -->
+  <rect x="130" y="320" width="820" height="470" rx="44" fill="#F6E7DC"/>
+  <rect x="320" y="358" width="440" height="64" rx="32" fill="#F8485E"/>
+  <text x="540" y="401" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="29" font-weight="700" fill="#FFFFFF" letter-spacing="3">OFERTA DA SEMANA</text>
+  <text x="540" y="560" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="118" font-weight="800" fill="#163A9E" letter-spacing="-2">ATÉ 50% OFF</text>
+  <text x="540" y="630" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="42" font-weight="600" fill="#1F46BE">em produtos selecionados</text>
+  <text x="540" y="720" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="30" font-weight="600" fill="#F8485E">Aproveite enquanto durar o estoque!</text>
+
+  <!-- CTA -->
+  <rect x="290" y="840" width="500" height="96" rx="48" fill="#F8485E"/>
+  <text x="540" y="901" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="36" font-weight="700" fill="#FFFFFF" letter-spacing="2">PEÇA PELO WHATSAPP</text>
+  <text x="540" y="1010" text-anchor="middle" font-family="Poppins, Montserrat, Arial, sans-serif" font-size="30" font-weight="600" fill="#F6E7DC">@lojaodaeconomia</text>
+</svg>

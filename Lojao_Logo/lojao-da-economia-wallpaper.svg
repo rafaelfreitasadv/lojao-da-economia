@@ -1,0 +1,55 @@
+<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">Papel de parede Lojão da Economia</title>
+  <desc id="d">Selo circular da marca centralizado sobre fundo azul, proporção 16:9.</desc>
+
+  <!-- Fundo azul (tela inteira) -->
+  <rect x="0" y="0" width="1920" height="1080" fill="#1B40B3"/>
+
+  <!-- Selo centralizado -->
+  <g transform="translate(585,165) scale(1.5)">
+    <!-- Selo circular -->
+    <circle cx="250" cy="250" r="216" fill="#F6E7DC" stroke="#163A9E" stroke-width="7"/>
+    <circle cx="250" cy="250" r="199" fill="none" stroke="#163A9E" stroke-width="2.5"/>
+
+    <!-- Sombra suave da caixa -->
+    <ellipse cx="250" cy="328" rx="86" ry="13" fill="#163A9E" opacity="0.10"/>
+
+    <!-- Abas de trás (abertas para cima) -->
+    <polygon points="190,232 250,204 232,168 168,194" fill="#3358CC"/>
+    <polygon points="250,204 310,232 332,194 268,168" fill="#3358CC"/>
+
+    <!-- Interior da caixa -->
+    <polygon points="190,232 250,204 310,232 250,260" fill="#102A75"/>
+
+    <!-- Faces da caixa -->
+    <polygon points="190,232 250,260 250,320 190,292" fill="#163A9E"/>
+    <polygon points="250,260 310,232 310,292 250,320" fill="#1F46BE"/>
+
+    <!-- Definição do coração -->
+    <defs>
+      <path id="heart" d="M16 28 C16 28 3 19.5 3 10.7 C3 6.2 6.2 3.2 10 3.2 C12.7 3.2 15 4.9 16 7.2 C17 4.9 19.3 3.2 22 3.2 C25.8 3.2 29 6.2 29 10.7 C29 19.5 16 28 16 28 Z" fill="#FFFFFF"/>
+    </defs>
+
+    <!-- Curtida esquerda -->
+    <g transform="translate(175,137) rotate(-12 21 21)">
+      <rect x="0" y="0" width="42" height="42" rx="12" fill="#F8485E"/>
+      <use href="#heart" transform="translate(7.98,8.38) scale(0.814)"/>
+    </g>
+
+    <!-- Curtida direita -->
+    <g transform="translate(286,145) rotate(12 19 19)">
+      <rect x="0" y="0" width="38" height="38" rx="11" fill="#F8485E"/>
+      <use href="#heart" transform="translate(7.22,7.59) scale(0.736)"/>
+    </g>
+
+    <!-- Curtida central (principal) -->
+    <g transform="translate(217,144)">
+      <rect x="0" y="0" width="66" height="66" rx="18" fill="#F8485E"/>
+      <use href="#heart" transform="translate(12.54,13.18) scale(1.279)"/>
+    </g>
+
+    <!-- Tipografia -->
+    <text x="250" y="374" text-anchor="middle" font-family="Poppins, Montserrat, 'Helvetica Neue', Arial, sans-serif" font-size="60" font-weight="800" fill="#163A9E" letter-spacing="-1">Lojão</text>
+    <text x="250" y="406" text-anchor="middle" font-family="Poppins, Montserrat, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="#1F46BE" letter-spacing="5">DA ECONOMIA</text>
+  </g>
+</svg>

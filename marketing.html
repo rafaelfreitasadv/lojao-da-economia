@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>Lojão da Economia — Portal de Marketing</title>
+<link rel="icon" href="Lojao_Logo/Favicon/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --navy:#163A9E;--navy-dark:#102A75;--blue:#1F46BE;--blue-light:#3358CC;
+    --cream:#F6E7DC;--coral:#F8485E;--ink:#1E293B;--mute:#64748B;--bord:#E5E9F2;--card:#F7F9FC;
+    --raio:14px;--sombra:0 4px 18px rgba(16,42,117,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
+  body{background:#EEF2F9;color:var(--ink)}
+  h1,h2,h3,.poppins{font-family:'Poppins',sans-serif}
+  .app{display:flex;min-height:100vh}
+  /* sidebar */
+  aside{width:250px;background:linear-gradient(180deg,var(--navy-dark),var(--navy));color:#fff;flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .brand{display:flex;align-items:center;gap:12px;padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .brand img{width:42px;height:42px}
+  .brand h1{font-size:16px;line-height:1.1}.brand p{font-size:11px;opacity:.8;font-family:'Inter'}
+  .navlbl{font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;opacity:.55;padding:16px 20px 6px}
+  .nav{display:flex;align-items:center;gap:11px;padding:11px 20px;cursor:pointer;font-size:13.5px;font-weight:500;border-left:3px solid transparent}
+  .nav:hover{background:rgba(255,255,255,.08)}
+  .nav.active{background:rgba(255,255,255,.14);border-left-color:var(--coral);font-weight:700}
+  .nav .ic{font-size:17px}
+  .usercard{margin-top:auto;padding:16px 18px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .av{width:36px;height:36px;border-radius:50%;background:var(--coral);display:flex;align-items:center;justify-content:center;font-weight:700}
+  .ghostbtn{background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:8px;padding:6px 8px;cursor:pointer;margin-left:auto}
+  /* main */
+  main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .top{background:#fff;border-bottom:1px solid var(--bord);padding:16px 26px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20}
+  .top h2{font-size:19px}.top p{font-size:12.5px;color:var(--mute)}
+  .ham{display:none;background:var(--card);border:1px solid var(--bord);border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer}
+  .area{padding:24px 26px;max-width:1200px;width:100%}
+  .page{display:none}.page.active{display:block;animation:fade .2s}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .grid{display:grid;gap:16px}
+  .k4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .k3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .k2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .card{background:#fff;border-radius:var(--raio);padding:18px;box-shadow:var(--sombra)}
+  .kpi .lbl{font-size:12px;color:var(--mute);font-weight:600}
+  .kpi .val{font-family:'Poppins';font-size:26px;font-weight:800;color:var(--navy);margin-top:4px}
+  .kpi .foot{font-size:11.5px;color:var(--mute);margin-top:3px}
+  .kpi.coral .val{color:var(--coral)}
+  .title{font-family:'Poppins';font-weight:700;font-size:15px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .sub{font-size:12px;color:var(--mute);margin-bottom:14px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--bord);border-radius:10px;font-size:13.5px;font-family:'Inter';background:#fff}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,70,190,.13)}
+  textarea{resize:vertical;min-height:90px}
+  .field{margin-bottom:13px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Inter'}
+  .btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy-dark)}
+  .btn-coral{background:var(--coral);color:#fff}
+  .btn-wa{background:#25D366;color:#fff}
+  .btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--bord)}
+  .btn-sm{padding:7px 12px;font-size:12.5px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;background:var(--cream);color:var(--navy-dark);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;margin:3px 4px 3px 0;cursor:pointer;border:2px solid transparent}
+  .pill.on{background:var(--navy);color:#fff}
+  .swatch{height:64px;border-radius:10px;display:flex;align-items:flex-end;padding:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+  .galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .gal{border:1px solid var(--bord);border-radius:12px;overflow:hidden;background:#fff;text-align:center}
+  .gal img{width:100%;height:150px;object-fit:contain;background:var(--cream);padding:6px}
+  .gal .cap{padding:8px;font-size:11.5px}
+  .gal a{display:block;padding:8px;font-size:12px;font-weight:700;color:var(--navy);text-decoration:none;border-top:1px solid var(--bord)}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:9px 8px;font-size:12.5px;border-bottom:1px solid var(--bord)}
+  th{font-size:11px;text-transform:uppercase;color:var(--mute);letter-spacing:.5px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy-dark);color:#fff;padding:13px 22px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .3s;z-index:9999}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast.ok{background:#16A34A}.toast.err{background:var(--coral)}
+  .alert{display:flex;gap:10px;background:#EFF4FF;border:1px solid #D6E2FF;border-radius:12px;padding:13px 15px;font-size:13px;margin-bottom:16px}
+  @media(max-width:860px){
+    .ham{display:flex}
+    aside{position:fixed;left:0;top:0;bottom:0;z-index:1000;transform:translateX(-100%);transition:transform .25s}
+    aside.open{transform:translateX(0)}
+    .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999}
+    .backdrop.show{display:block}
+    .top h2{font-size:16px}.top p{display:none}.area{padding:16px}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#102A75,#1F46BE);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;max-width:380px;width:100%;padding:34px;box-shadow:0 24px 70px rgba(0,0,0,.4);text-align:center">
+    <img src="Lojao_Logo/lojao-da-economia-transparente.png" alt="Lojão" style="width:96px;margin-bottom:8px"/>
+    <div class="poppins" style="font-weight:800;font-size:20px;color:var(--navy)">Portal de Marketing</div>
+    <div style="color:var(--mute);font-size:13px;margin-bottom:20px">Acesso exclusivo da gestão de marketing</div>
+    <div class="field" style="text-align:left"><label>Usuário</label><input id="lgUser" placeholder="hiellen" onkeydown="if(event.key==='Enter')document.getElementById('lgPass').focus()"/></div>
+    <div class="field" style="text-align:left"><label>Senha</label><input id="lgPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')entrar()"/></div>
+    <div id="lgErr" style="color:var(--coral);font-size:12.5px;min-height:18px;margin-bottom:6px"></div>
+    <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px" onclick="entrar()">Entrar →</button>
+    <div id="lgVer" style="margin-top:14px;font-size:10.5px;color:#94A3B8"></div>
+  </div>
+</div>
+
+<div class="app" id="appWrap" style="display:none">
+  <div class="backdrop" id="bd" onclick="toggleMenu()"></div>
+  <aside id="aside">
+    <div class="brand">
+      <img src="Lojao_Logo/lojao-icone-transparente.png" alt=""/>
+      <div><h1>Lojão da Economia</h1><p>Marketing</p></div>
+    </div>
+    <div class="navlbl">Painel</div>
+    <div class="nav active" data-p="dashboard"><span class="ic">📊</span> Visão de Marketing</div>
+    <div class="navlbl">Divulgação</div>
+    <div class="nav" data-p="whatsapp"><span class="ic">📲</span> Disparo WhatsApp</div>
+    <div class="nav" data-p="conteudo"><span class="ic">🎨</span> Central de Conteúdo</div>
+    <div class="nav" data-p="planejador"><span class="ic">🗓️</span> Planejador de Posts</div>
+    <div class="navlbl">Marca</div>
+    <div class="nav" data-p="identidade"><span class="ic">🏷️</span> Identidade Visual</div>
+    <div class="nav" data-p="qrcode"><span class="ic">🔳</span> QR Codes</div>
+    <div class="usercard">
+      <div class="av">HL</div>
+      <div><strong>Hiellen Lima</strong><br><span style="opacity:.75">Sócia · Marketing</span></div>
+      <button class="ghostbtn" title="Sair" onclick="sair()">🚪</button>
+    </div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <button class="ham" onclick="toggleMenu()">☰</button>
+      <div style="flex:1"><h2 id="pTit">Visão de Marketing</h2><p id="pSub">Dados reais da loja para decidir suas campanhas</p></div>
+      <span id="cloudTag" title="" style="font-size:18px">☁️</span>
+    </header>
+    <div class="area">
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="grid k4" id="mkKpis"></div>
+        <div class="grid k2" style="margin-top:18px">
+          <div class="card"><div class="title">🏆 Produtos para divulgar</div><div class="sub">Os campeões de venda — bom destaque nos posts</div><div id="mkTop"></div></div>
+          <div class="card"><div class="title">📍 Onde está sua audiência</div><div class="sub">Clientes cadastrados por cidade</div><div id="mkCidades"></div></div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="title">💡 Sugestões inteligentes</div><div class="sub">Baseadas nos dados de venda</div>
+          <div id="mkDicas"></div>
+        </div>
+      </section>
+
+      <!-- WHATSAPP -->
+      <section class="page" id="page-whatsapp">
+        <div class="alert"><span>📲</span><div>Dispare mensagens para grupos de clientes que aceitaram receber. O sistema abre o WhatsApp já com a mensagem pronta — você confirma o envio. Use <strong>[NOME]</strong>, <strong>[CIDADE]</strong> e <strong>[DATA]</strong> que o sistema troca pelos dados de cada cliente.</div></div>
+        <div class="grid k2">
+          <div class="card">
+            <div class="title">🎯 Para quem enviar</div>
+            <div class="field"><label>Segmento</label>
+              <select id="waSeg" onchange="contarAlvo()">
+                <option value="todos">Todos que aceitam WhatsApp</option>
+                <option value="vip">Somente clientes VIP (3+ compras)</option>
+                <option value="cidade">Por cidade específica</option>
+              </select>
+            </div>
+            <div class="field" id="waCidadeWrap" style="display:none"><label>Cidade</label><select id="waCidade" onchange="contarAlvo()"></select></div>
+            <div class="pill" style="cursor:default" id="waCount">0 clientes</div>
+          </div>
+          <div class="card">
+            <div class="title">✍️ Mensagem</div>
+            <div class="field"><label>Modelos rápidos</label>
+              <div class="row" id="waModelos"></div>
+            </div>
+            <div class="field"><label>Texto</label><textarea id="waMsg">Olá [NOME]! 🚚📦 O *Lojão da Economia* está com novidades! Tudo a R$10. Te esperamos! ❤️</textarea></div>
+            <button class="btn btn-wa" style="width:100%" onclick="dispararWa()">📲 Gerar disparos no WhatsApp</button>
+            <div style="font-size:11px;color:var(--mute);margin-top:8px">Abre uma conversa por cliente. Você confirma cada envio.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTEÚDO -->
+      <section class="page" id="page-conteudo">
+        <div class="card">
+          <div class="title">🎨 Modelos de post prontos</div><div class="sub">Baixe e use no Instagram/Facebook/Status. Já no padrão da marca.</div>
+          <div class="galg" id="modelosGal"></div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="title">✨ Gerador de legendas</div><div class="sub">Escolha o tipo e gere uma legenda pronta com hashtags</div>
+          <div class="row" style="margin-bottom:12px">
+            <div class="field" style="flex:1;min-width:200px;margin:0"><label>Tipo de post</label>
+              <select id="legTipo">
+                <option value="oferta">Oferta / Tudo a R$10</option>
+                <option value="novidade">Novidade / Chegou produto</option>
+                <option value="cidade">Caminhão na cidade hoje</option>
+                <option value="relampago">Promoção relâmpago</option>
+                <option value="bomdia">Bom dia / engajamento</option>
+              </select>
+            </div>
+            <div class="field" style="flex:1;min-width:160px;margin:0"><label>Detalhe (opcional)</label><input id="legDet" placeholder="ex: cidade, produto…"/></div>
+            <button class="btn btn-primary" style="align-self:flex-end" onclick="gerarLegenda()">✨ Gerar</button>
+          </div>
+          <textarea id="legOut" style="min-height:140px" placeholder="A legenda gerada aparece aqui…"></textarea>
+          <div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="copiar('legOut')">📋 Copiar</button></div>
+        </div>
+      </section>
+
+      <!-- PLANEJADOR -->
+      <section class="page" id="page-planejador">
+        <div class="grid k2">
+          <div class="card">
+            <div class="title">🗓️ Agendar post</div><div class="sub">Planeje seu calendário de conteúdo</div>
+            <div class="field"><label>Data</label><input type="date" id="plData"/></div>
+            <div class="field"><label>Onde</label><select id="plRede"><option>Instagram</option><option>Facebook</option><option>Status WhatsApp</option><option>TikTok</option></select></div>
+            <div class="field"><label>Tema</label><input id="plTema" placeholder="ex: Quinta Relâmpago"/></div>
+            <div class="field"><label>Legenda / observação</label><textarea id="plLeg" style="min-height:70px"></textarea></div>
+            <button class="btn btn-primary" style="width:100%" onclick="addPost()">+ Agendar</button>
+          </div>
+          <div class="card">
+            <div class="title">📅 Posts planejados</div><div class="sub">Salvo na nuvem — sincroniza com qualquer aparelho</div>
+            <div id="plLista"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- IDENTIDADE -->
+      <section class="page" id="page-identidade">
+        <div class="card">
+          <div class="title">🎨 Cores da marca</div><div class="sub">Clique para copiar o código</div>
+          <div class="grid k4" id="cores"></div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="title">🏷️ Kit de marca para baixar</div><div class="sub">Logos, ícones, símbolo e papéis de parede</div>
+          <div class="galg" id="kitGal"></div>
+        </div>
+      </section>
+
+      <!-- QR -->
+      <section class="page" id="page-qrcode">
+        <div class="card" style="max-width:560px">
+          <div class="title">🔳 Gerador de QR Code</div><div class="sub">Para colar no caminhão, na vitrine, em panfletos…</div>
+          <div class="field"><label>Atalho</label>
+            <select id="qrTipo" onchange="qrPreset()">
+              <option value="">— escolher —</option>
+              <option value="wa">WhatsApp da loja</option>
+              <option value="ig">Instagram</option>
+              <option value="link">Link / texto livre</option>
+            </select>
+          </div>
+          <div class="field"><label>Conteúdo (link, telefone ou texto)</label><input id="qrData" placeholder="https://… ou 5585999999999"/></div>
+          <button class="btn btn-primary" onclick="gerarQR()">🔳 Gerar QR Code</button>
+          <div id="qrOut" style="text-align:center;margin-top:16px"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========= config ========= */
+const APP_VERSION='Marketing v1 · 03/06/2026';
+const firebaseConfig={
+  apiKey:"AIzaSyCpiBatJKueXfk7-Mshot9vX1C0iRfRmLw",
+  authDomain:"lojao-da-economia.firebaseapp.com",
+  projectId:"lojao-da-economia",
+  storageBucket:"lojao-da-economia.firebasestorage.app",
+  messagingSenderId:"101528989586",
+  appId:"1:101528989586:web:7ef9b0bbbdb43c96925b4b"
+};
+/* login exclusivo (uma pessoa) */
+const MKT_USER='hiellen', MKT_SENHA='marketing@2026';
+
+let db=null, DADOS={produtos:[],clientes:[],vendas:[]}, MKT={posts:[]}, pagina='dashboard';
+function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR')}
+function toast(m,t=''){const e=document.getElementById('toast');e.textContent=m;e.className='toast show '+t;setTimeout(()=>e.className='toast',2600)}
+document.getElementById('lgVer').textContent=APP_VERSION;
+
+/* ========= login ========= */
+function entrar(){
+  const u=document.getElementById('lgUser').value.trim().toLowerCase();
+  const s=document.getElementById('lgPass').value;
+  if(u!==MKT_USER||s!==MKT_SENHA){document.getElementById('lgErr').textContent='Usuário ou senha incorretos.';return;}
+  sessionStorage.setItem('mktAuth','1');
+  boot();
+}
+function sair(){sessionStorage.removeItem('mktAuth');location.reload()}
+function boot(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('appWrap').style.display='flex';
+  conectar();
+  go('dashboard');
+}
+
+/* ========= nuvem (lê os mesmos dados da gestão; grava só o próprio doc de marketing) ========= */
+function conectar(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db=firebase.firestore();
+    db.collection('lojao').doc('estado').onSnapshot(snap=>{
+      document.getElementById('cloudTag').textContent='☁️';
+      document.getElementById('cloudTag').title='Conectado — dados ao vivo';
+      if(snap.exists&&snap.data().json){try{const S=JSON.parse(snap.data().json);DADOS={produtos:S.produtos||[],clientes:S.clientes||[],vendas:S.vendas||[]};}catch(e){}}
+      render();
+    },e=>{document.getElementById('cloudTag').textContent='⚠️';});
+    db.collection('lojao').doc('marketing').onSnapshot(snap=>{
+      if(snap.exists&&snap.data().json){try{MKT=JSON.parse(snap.data().json);}catch(e){}}
+      if(!MKT.posts)MKT.posts=[];
+      if(pagina==='planejador')renderPlanejador();
+    });
+  }catch(e){document.getElementById('cloudTag').textContent='⚠️';}
+}
+function saveMkt(){ if(db)db.collection('lojao').doc('marketing').set({json:JSON.stringify(MKT),ts:Date.now()}).catch(()=>{}); }
+
+/* ========= navegação ========= */
+const TIT={dashboard:['Visão de Marketing','Dados reais da loja para decidir suas campanhas'],
+  whatsapp:['Disparo WhatsApp','Mensagens para grupos de clientes'],
+  conteudo:['Central de Conteúdo','Modelos de post e gerador de legendas'],
+  planejador:['Planejador de Posts','Seu calendário de conteúdo'],
+  identidade:['Identidade Visual','Cores e kit de marca para baixar'],
+  qrcode:['QR Codes','Gere QR Codes para divulgação']};
+function go(p){
+  pagina=p;
+  document.querySelectorAll('.page').forEach(s=>s.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.p===p));
+  document.getElementById('pTit').textContent=TIT[p][0];
+  document.getElementById('pSub').textContent=TIT[p][1];
+  if(p==='dashboard')renderDashboard();
+  if(p==='whatsapp')renderWhatsapp();
+  if(p==='conteudo')renderConteudo();
+  if(p==='planejador')renderPlanejador();
+  if(p==='identidade')renderIdentidade();
+  fecharMenu();
+}
+document.querySelectorAll('.nav').forEach(n=>n.addEventListener('click',()=>go(n.dataset.p)));
+function toggleMenu(){const a=document.getElementById('aside'),b=document.getElementById('bd');const o=a.classList.toggle('open');b.classList.toggle('show',o);}
+function fecharMenu(){document.getElementById('aside').classList.remove('open');document.getElementById('bd').classList.remove('show');}
+function render(){ if(pagina==='dashboard')renderDashboard(); if(pagina==='whatsapp')renderWhatsapp(); }
+
+/* ========= DASHBOARD ========= */
+function renderDashboard(){
+  const cli=DADOS.clientes||[], vendas=DADOS.vendas||[], prod=DADOS.produtos||[];
+  const aceita=cli.filter(c=>c.aceitaWa).length;
+  const vip=cli.filter(c=>c.compras>=3).length;
+  const cidades=new Set(vendas.map(v=>v.cidade).filter(Boolean));
+  document.getElementById('mkKpis').innerHTML=`
+    ${kpi('Clientes na base',fmtN(cli.length),'❤️','')}
+    ${kpi('Aceitam WhatsApp',fmtN(aceita),'📲','base para campanhas','coral')}
+    ${kpi('Clientes VIP',fmtN(vip),'⭐','3+ compras')}
+    ${kpi('Cidades alcançadas',fmtN(cidades.size),'📍','presença da marca')}`;
+  // top produtos (por qtd vendida)
+  const ct={};
+  vendas.forEach(v=>(v.itens||[]).forEach(i=>ct[i.nome]=(ct[i.nome]||0)+i.qt));
+  const top=Object.entries(ct).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  document.getElementById('mkTop').innerHTML=top.length?top.map(([n,q],i)=>
+    `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--bord)"><strong style="color:var(--coral)">${i+1}º</strong><span style="flex:1">${n}</span><span class="pill" style="cursor:default">${q} vend.</span></div>`).join('')
+    :'<div style="color:var(--mute);font-size:13px;padding:8px">Ainda sem vendas registradas.</div>';
+  // clientes por cidade
+  const cc={};cli.forEach(c=>{if(c.cidade)cc[c.cidade]=(cc[c.cidade]||0)+1});
+  const ccs=Object.entries(cc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('mkCidades').innerHTML=ccs.length?ccs.map(([c,n])=>
+    `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--bord);font-size:13px"><span>${c}</span><strong>${n}</strong></div>`).join('')
+    :'<div style="color:var(--mute);font-size:13px;padding:8px">Cadastre clientes com cidade no caixa para ver aqui.</div>';
+  // dicas (melhor dia/hora)
+  const ds=[0,0,0,0,0,0,0];vendas.forEach(v=>{const d=new Date(v.data+'T00:00:00').getDay();if(!isNaN(d))ds[d]++});
+  const diaNomes=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const melhorDia=ds.some(x=>x)?diaNomes[ds.indexOf(Math.max(...ds))]:null;
+  const hr={};vendas.forEach(v=>{const h=(v.hora||'').split(':')[0];if(h)hr[h]=(hr[h]||0)+1});
+  const melhorHora=Object.keys(hr).length?Object.entries(hr).sort((a,b)=>b[1]-a[1])[0][0]+'h':null;
+  const dicas=[];
+  if(melhorDia)dicas.push(`📅 <strong>${melhorDia}</strong> é o dia de maior movimento — bom dia para postar promoções.`);
+  if(melhorHora)dicas.push(`⏰ O pico de vendas é por volta das <strong>${melhorHora}</strong> — poste um pouco antes para atrair.`);
+  if(top[0])dicas.push(`🏆 <strong>${top[0][0]}</strong> é o queridinho — vale um post de destaque ou combo.`);
+  if(aceita>0)dicas.push(`📲 Você tem <strong>${aceita} clientes</strong> liberados para receber WhatsApp — use a aba Disparo para uma campanha.`);
+  if(!dicas.length)dicas.push('Conforme as vendas forem entrando, aparecem aqui sugestões automáticas de marketing. 🚀');
+  document.getElementById('mkDicas').innerHTML=dicas.map(d=>`<div class="alert" style="margin:0 0 10px"><span>💡</span><div>${d}</div></div>`).join('');
+}
+function kpi(l,v,ic,foot,cls=''){return `<div class="card kpi ${cls}"><div style="display:flex;justify-content:space-between"><span class="lbl">${l}</span><span style="font-size:20px">${ic}</span></div><div class="val">${v}</div><div class="foot">${foot||''}</div></div>`}
+
+/* ========= WHATSAPP ========= */
+const MODELOS=[
+  {t:'Cidade do dia',m:'Olá [NOME]! 🚚 O *Lojão da Economia* está hoje em [CIDADE]! Vem aproveitar, tudo a R$10. Te esperamos no centro! ❤️'},
+  {t:'Promoção',m:'Oi [NOME]! 🔥 Promoção no *Lojão da Economia*: tudo a R$10 e muitas novidades. Corre que é por tempo limitado! 🛒'},
+  {t:'Novidades',m:'[NOME], chegou coisa nova no *Lojão da Economia*! 📦✨ Passa pra ver, tudo a R$10. ❤️'},
+  {t:'Volta à cidade',m:'Olá [NOME]! 🚚 Dia [DATA] o *Lojão da Economia* volta pra sua cidade! Já separa sua listinha. Tudo a R$10! 🎉'}
+];
+function renderWhatsapp(){
+  document.getElementById('waModelos').innerHTML=MODELOS.map((m,i)=>`<span class="pill" onclick="document.getElementById('waMsg').value=MODELOS[${i}].m">${m.t}</span>`).join('');
+  const cid=[...new Set((DADOS.clientes||[]).map(c=>c.cidade).filter(Boolean))].sort();
+  document.getElementById('waCidade').innerHTML=cid.map(c=>`<option>${c}</option>`).join('');
+  contarAlvo();
+}
+function alvos(){
+  let l=(DADOS.clientes||[]).filter(c=>c.aceitaWa&&c.wa);
+  const seg=document.getElementById('waSeg').value;
+  document.getElementById('waCidadeWrap').style.display=seg==='cidade'?'block':'none';
+  if(seg==='vip')l=l.filter(c=>c.compras>=3);
+  if(seg==='cidade'){const c=document.getElementById('waCidade').value;l=l.filter(x=>x.cidade===c);}
+  return l;
+}
+function contarAlvo(){const n=alvos().length;document.getElementById('waCount').textContent=n+(n===1?' cliente':' clientes');}
+function dispararWa(){
+  const l=alvos();
+  if(!l.length)return toast('Nenhum cliente nesse segmento','err');
+  const base=document.getElementById('waMsg').value;
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  if(!confirm('Vão abrir '+l.length+' conversa(s) de WhatsApp, uma a uma. Você confirma cada envio. Continuar?'))return;
+  l.forEach((c,i)=>setTimeout(()=>{
+    const msg=base.replace(/\[NOME\]/g,(c.nome||'').split(' ')[0]||'').replace(/\[CIDADE\]/g,c.cidade||'').replace(/\[DATA\]/g,hoje);
+    const num=(''+c.wa).replace(/\D/g,'');
+    window.open('https://wa.me/55'+num+'?text='+encodeURIComponent(msg),'_blank');
+  },i*500));
+  toast('Abrindo '+l.length+' conversas ✅','ok');
+}
+
+/* ========= CONTEÚDO ========= */
+const MODELOS_POST=[
+  {f:'Lojao_Logo/Marketing/post-boasvindas.png',c:'Post Boas-vindas'},
+  {f:'Lojao_Logo/Marketing/post-oferta.png',c:'Post Oferta'},
+  {f:'Lojao_Logo/Marketing/post-relampago.png',c:'Post Relâmpago'},
+  {f:'Lojao_Logo/Marketing/story-oferta.png',c:'Story Oferta'}
+];
+function renderConteudo(){
+  document.getElementById('modelosGal').innerHTML=MODELOS_POST.map(m=>
+    `<div class="gal"><img src="${m.f}" alt="${m.c}"/><div class="cap">${m.c}</div><a href="${m.f}" download>⬇️ Baixar</a></div>`).join('');
+}
+function gerarLegenda(){
+  const t=document.getElementById('legTipo').value;
+  const d=document.getElementById('legDet').value.trim();
+  const ct={};(DADOS.vendas||[]).forEach(v=>(v.itens||[]).forEach(i=>ct[i.nome]=(ct[i.nome]||0)+i.qt));
+  const top=Object.entries(ct).sort((a,b)=>b[1]-a[1])[0];
+  const prodTop=d||(top?top[0]:'nossos produtos');
+  const tags='\n\n#LojãoDaEconomia #TudoA10 #Promoção #Economia #Ceará #OfertaDoDia #VarejoPopular';
+  let txt='';
+  if(t==='oferta')txt=`🛒 TUDO A R$10 no Lojão da Economia! 🤑\n\nVariedade que cabe no seu bolso — casa, beleza, utilidades e muito mais. Vem garantir o seu! ❤️`;
+  else if(t==='novidade')txt=`✨ CHEGOU NOVIDADE! ✨\n\n${prodTop} e muito mais te esperando no Lojão da Economia. Corre que voa! 🏃💨 Tudo a R$10.`;
+  else if(t==='cidade')txt=`🚚📍 ESTAMOS EM ${(d||'SUA CIDADE').toUpperCase()} HOJE! 🎉\n\nO caminhão do Lojão da Economia chegou! Passa no centro e aproveita tudo a R$10. Te esperamos! ❤️`;
+  else if(t==='relampago')txt=`⚡ PROMOÇÃO RELÂMPAGO ⚡\n\nSó hoje! Preços que você não vai acreditar no Lojão da Economia. Tudo a R$10. Marca aquele amigo que ama uma economia! 🛍️`;
+  else txt=`☀️ Bom dia! Que tal começar economizando? 💙\n\nNo Lojão da Economia é tudo a R$10. Comenta aqui o que você procura que a gente tem! 👇`;
+  document.getElementById('legOut').value=txt+tags;
+  toast('Legenda gerada ✨','ok');
+}
+function copiar(id){const el=document.getElementById(id);el.select();navigator.clipboard.writeText(el.value).then(()=>toast('Copiado! 📋','ok'),()=>toast('Selecione e copie manualmente','err'));}
+
+/* ========= PLANEJADOR ========= */
+function addPost(){
+  const data=document.getElementById('plData').value;
+  const tema=document.getElementById('plTema').value.trim();
+  if(!data||!tema)return toast('Preencha data e tema','err');
+  MKT.posts=MKT.posts||[];
+  MKT.posts.push({id:Date.now(),data,rede:document.getElementById('plRede').value,tema,leg:document.getElementById('plLeg').value});
+  saveMkt();
+  document.getElementById('plTema').value='';document.getElementById('plLeg').value='';
+  renderPlanejador();toast('Post agendado ✅','ok');
+}
+function delPost(id){MKT.posts=(MKT.posts||[]).filter(p=>p.id!==id);saveMkt();renderPlanejador();toast('Removido','ok');}
+function renderPlanejador(){
+  const ps=(MKT.posts||[]).slice().sort((a,b)=>a.data.localeCompare(b.data));
+  document.getElementById('plLista').innerHTML=ps.length?ps.map(p=>{
+    const dt=new Date(p.data+'T00:00:00').toLocaleDateString('pt-BR');
+    return `<div style="border:1px solid var(--bord);border-radius:10px;padding:11px;margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${dt} · ${p.rede}</strong>
+        <button class="btn btn-ghost btn-sm" onclick="delPost(${p.id})">🗑️</button>
+      </div>
+      <div style="font-weight:600;margin:3px 0">${p.tema}</div>
+      ${p.leg?`<div style="font-size:12px;color:var(--mute)">${p.leg}</div>`:''}
+    </div>`;
+  }).join(''):'<div style="color:var(--mute);font-size:13px;padding:8px">Nenhum post agendado ainda.</div>';
+  document.getElementById('plData').value=document.getElementById('plData').value||new Date().toISOString().split('T')[0];
+}
+
+/* ========= IDENTIDADE ========= */
+const CORES=[['Azul marca','#163A9E'],['Azul escuro','#102A75'],['Azul vivo','#1F46BE'],['Coral / coração','#F8485E'],['Creme','#F6E7DC'],['Branco','#FFFFFF']];
+const KIT=[
+  {f:'Lojao_Logo/lojao-da-economia-transparente.png',c:'Logo completa'},
+  {f:'Lojao_Logo/lojao-da-economia-fundo-azul.png',c:'Logo fundo azul'},
+  {f:'Lojao_Logo/lojao-icone-transparente.png',c:'Ícone'},
+  {f:'Lojao_Logo/lojao-icone-fundo-azul.png',c:'Ícone fundo azul'},
+  {f:'Lojao_Logo/Simbolo/lojao-simbolo-caixa.png',c:'Símbolo (caixa)'},
+  {f:'Lojao_Logo/lojao-wallpaper-1920x1080.png',c:'Wallpaper Full HD'},
+  {f:'Lojao_Logo/lojao-wallpaper-3840x2160.png',c:'Wallpaper 4K'}
+];
+function renderIdentidade(){
+  document.getElementById('cores').innerHTML=CORES.map(([n,h])=>{
+    const dark=['#F6E7DC','#FFFFFF'].includes(h);
+    return `<div class="swatch" style="background:${h};color:${dark?'#102A75':'#fff'}" onclick="navigator.clipboard.writeText('${h}').then(()=>toast('${h} copiado!','ok'))">${n}<br>${h}</div>`;
+  }).join('');
+  document.getElementById('kitGal').innerHTML=KIT.map(k=>
+    `<div class="gal"><img src="${k.f}" alt="${k.c}"/><div class="cap">${k.c}</div><a href="${k.f}" download>⬇️ Baixar</a></div>`).join('');
+}
+
+/* ========= QR ========= */
+function qrPreset(){
+  const t=document.getElementById('qrTipo').value;const i=document.getElementById('qrData');
+  if(t==='wa')i.value='https://wa.me/55';
+  else if(t==='ig')i.value='https://instagram.com/';
+  else i.value='';
+  i.focus();
+}
+function gerarQR(){
+  let d=document.getElementById('qrData').value.trim();
+  if(!d)return toast('Informe o conteúdo','err');
+  if(/^\d{10,13}$/.test(d.replace(/\D/g,''))&&!d.includes('http'))d='https://wa.me/55'+d.replace(/\D/g,'');
+  const url='https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data='+encodeURIComponent(d);
+  document.getElementById('qrOut').innerHTML=`<img src="${url}" alt="QR" style="border:1px solid var(--bord);border-radius:12px"/><div style="margin-top:10px"><a class="btn btn-ghost btn-sm" href="${url}&download=1" download="qrcode-lojao.png">⬇️ Baixar QR Code</a></div>`;
+}
+
+/* ========= init ========= */
+if(sessionStorage.getItem('mktAuth')==='1')boot();
+</script>
+</body>
+</html>
