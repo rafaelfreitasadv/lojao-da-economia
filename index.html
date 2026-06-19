@@ -655,7 +655,15 @@
     .modal{max-width:94vw}
     .pay-buttons{grid-template-columns:1fr 1fr}
   }
-  @media(max-width:430px){ .kpi-grid{grid-template-columns:1fr} }
+  @media(max-width:600px){
+    /* no celular: cards menores em 2 colunas e gráficos mais baixos, pra alcançar a tabela */
+    .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+    .kpi{padding:12px}
+    .kpi-value{font-size:18px}
+    .kpi-icon{width:30px;height:30px;font-size:15px}
+    .chart-wrap,.chart-wrap.lg{height:200px}
+  }
+  @media(max-width:360px){ .kpi-grid{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -707,7 +715,7 @@
       <div class="nav-label">Comercial</div>
       <div class="nav-item" data-page="vendas"><span class="ico">💰</span> Vendas</div>
       <div class="nav-item" data-page="produtos"><span class="ico">🏷️</span> Produtos</div>
-      <div class="nav-item" data-page="estoque" data-unidade="loja1"><span class="ico">🏪</span> Estoque Antônio Diego <span class="nav-badge" id="badgeEst-loja1">0</span></div>
+      <div class="nav-item" data-page="estoque" data-unidade="loja1"><span class="ico">🏪</span> Estoque Antônio Diogo <span class="nav-badge" id="badgeEst-loja1">0</span></div>
       <div class="nav-item" data-page="estoque" data-unidade="loja2"><span class="ico">🏪</span> Estoque Baturité <span class="nav-badge" id="badgeEst-loja2">0</span></div>
       <div class="nav-item" data-page="estoque" data-unidade="caminhao"><span class="ico">🚚</span> Estoque Caminhão <span class="nav-badge" id="badgeEst-caminhao">0</span></div>
       <div class="nav-item" data-page="transferencias"><span class="ico">🔄</span> Transferências</div>
@@ -995,6 +1003,7 @@
                   <button class="pay-btn active" data-pay="pix"><span class="ico">📱</span>PIX</button>
                   <button class="pay-btn" data-pay="dinheiro"><span class="ico">💵</span>Dinheiro</button>
                   <button class="pay-btn" data-pay="cartao"><span class="ico">💳</span>Cartão</button>
+                  <button class="pay-btn" data-pay="misto"><span class="ico">➗</span>Misto</button>
                 </div>
                 <div class="field" id="parcelasWrap" style="display:none;margin-bottom:10px">
                   <label>Parcelas (até 10x sem juros)</label>
@@ -1003,6 +1012,13 @@
                 <div id="trocoWrap" style="display:none;margin-bottom:10px">
                   <div class="field"><label>Valor recebido (R$)</label><input type="number" id="pdvRecebido" step="0.01" placeholder="0,00" oninput="renderTroco()"/></div>
                   <div class="flex justify-between" style="font-size:14px;padding:6px 2px"><span class="text-mute">Troco</span><strong id="pdvTroco" style="color:var(--verde)">R$ 0,00</strong></div>
+                </div>
+                <div id="mistoWrap" style="display:none;margin-bottom:10px;background:#FAFBFE;border:1px solid var(--cinza-borda);border-radius:10px;padding:10px">
+                  <div style="font-size:11.5px;color:var(--cinza-mute);margin-bottom:8px">Divida o valor entre as formas (a soma deve bater com o total):</div>
+                  <div class="field" style="margin-bottom:8px"><label>💵 No dinheiro (R$)</label><input type="number" id="mDinheiro" step="0.01" value="0" oninput="renderMisto()"/></div>
+                  <div class="field" style="margin-bottom:8px"><label>💳 No cartão (R$)</label><input type="number" id="mCartao" step="0.01" value="0" oninput="renderMisto()"/></div>
+                  <div class="field" style="margin-bottom:8px"><label>📱 No PIX (R$)</label><input type="number" id="mPix" step="0.01" value="0" oninput="renderMisto()"/></div>
+                  <div class="flex justify-between" style="font-size:13px;padding:4px 2px"><span class="text-mute">Somado / Total</span><strong id="mistoStatus">R$ 0,00 / R$ 0,00</strong></div>
                 </div>
                 <button class="btn btn-success" style="width:100%;justify-content:center;padding:12px" onclick="finalizarVenda()">✅ Finalizar Venda</button>
                 <div class="flex gap-12" style="margin-top:6px">
@@ -1155,6 +1171,27 @@
           <div class="kpi purple"><div class="kpi-head"><div class="kpi-label">PIX é</div><div class="kpi-icon">📱</div></div><div class="kpi-value" id="vPix">0%</div><div class="kpi-foot">das vendas</div></div>
         </div>
 
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><span class="ico">📜</span> Vendas</div><div class="panel-sub">Escolha um dia para ver TODAS as vendas dele</div></div>
+            <div class="panel-actions" style="flex-wrap:wrap;gap:8px">
+              <input type="date" id="filterDiaVendas" onchange="renderTblVendasGlobal()" style="padding:7px 10px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:12.5px"/>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('filterDiaVendas').value='';renderTblVendasGlobal()">Todos os dias</button>
+              <select id="filterCidadeVendas" style="padding:7px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:12.5px">
+                <option value="">Todas cidades</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="exportarVendas()">📥 Exportar</button>
+            </div>
+          </div>
+          <div id="vendasResumoDia" class="alert-box info" style="display:none;margin-bottom:12px"></div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblVendas">
+              <thead><tr><th>Data/Hora</th><th>Canal</th><th>Cidade / Local</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Vendedor</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="row-equal">
           <div class="panel">
             <div class="panel-head"><div><div class="panel-title"><span class="ico">💳</span> Forma de pagamento</div></div></div>
@@ -1163,24 +1200,6 @@
           <div class="panel">
             <div class="panel-head"><div><div class="panel-title"><span class="ico">📊</span> Vendas por hora</div></div></div>
             <div class="chart-wrap"><canvas id="chartHora"></canvas></div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head">
-            <div><div class="panel-title"><span class="ico">📜</span> Últimas vendas</div></div>
-            <div class="panel-actions">
-              <select id="filterCidadeVendas" style="padding:7px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:12.5px">
-                <option value="">Todas cidades</option>
-              </select>
-              <button class="btn btn-ghost btn-sm">📥 Exportar</button>
-            </div>
-          </div>
-          <div class="scroll-x">
-            <table class="tbl" id="tblVendas">
-              <thead><tr><th>Data/Hora</th><th>Canal</th><th>Cidade / Local</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Vendedor</th></tr></thead>
-              <tbody></tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -1197,7 +1216,7 @@
           </div>
           <div class="scroll-x">
             <table class="tbl" id="tblProdutos">
-              <thead><tr><th>Produto</th><th>Cód. barras</th><th>Custo</th><th>Preço</th><th>🏪 A.Diego</th><th>🏪 Baturité</th><th>🚚 Caminhão</th><th>Total</th><th>Vend.</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Produto</th><th>Cód. barras</th><th>Custo</th><th>Preço</th><th>🏪 A.Diogo</th><th>🏪 Baturité</th><th>🚚 Caminhão</th><th>Total</th><th>Vend.</th><th>Ações</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -1235,10 +1254,13 @@
           <div class="panel">
             <div class="panel-head"><div><div class="panel-title"><span class="ico">📦➡️📦</span> Nova transferência</div><div class="panel-sub">Origem → Destino</div></div></div>
             <div class="form-grid">
-              <div class="field"><label>De (origem)</label><select id="trDe" onchange="renderTransferProdOptions()"><option value="loja1">🏪 Loja Antônio Diego</option><option value="loja2">🏪 Loja Baturité</option><option value="caminhao">🚚 Caminhão</option></select></div>
-              <div class="field"><label>Para (destino)</label><select id="trPara"><option value="caminhao">🚚 Caminhão</option><option value="loja1">🏪 Loja Antônio Diego</option><option value="loja2">🏪 Loja Baturité</option></select></div>
+              <div class="field"><label>De (origem)</label><select id="trDe" onchange="renderTransferProdOptions()"><option value="loja1">🏪 Loja Antônio Diogo</option><option value="loja2">🏪 Loja Baturité</option><option value="caminhao">🚚 Caminhão</option></select></div>
+              <div class="field"><label>Para (destino)</label><select id="trPara"><option value="caminhao">🚚 Caminhão</option><option value="loja1">🏪 Loja Antônio Diogo</option><option value="loja2">🏪 Loja Baturité</option></select></div>
               <div class="field"><label>Data</label><input type="date" id="trData"/></div>
-              <div class="field"><label>Produto</label><select id="trProd"></select></div>
+              <div class="field"><label>Produto</label>
+                <input type="text" id="trBusca" placeholder="🔎 Buscar por nome ou código…" autocomplete="off" oninput="renderTransferProdOptions()" style="margin-bottom:6px;padding:7px 10px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:13px;width:100%"/>
+                <select id="trProd" size="6" style="height:auto"></select>
+              </div>
               <div class="field"><label>Quantidade</label><input type="number" id="trQt" value="1" min="1"/></div>
               <div class="field" style="display:flex;align-items:flex-end"><button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="addItemTransfer()">+ Adicionar item</button></div>
             </div>
@@ -1275,8 +1297,8 @@
               <div class="field"><label>Data</label><input type="date" id="tkData"/></div>
               <div class="field"><label>Tipo</label><select id="tkTipo"><option value="troca">🔁 Troca (volta produto, leva outro)</option><option value="devolucao">💸 Devolução (volta produto e dinheiro)</option></select></div>
               <div class="field"><label>Produto devolvido</label><select id="tkProd"></select></div>
-              <div class="field"><label>Onde foi comprado</label><select id="tkLocal"><option value="caminhao">🚚 Caminhão</option><option value="loja1">🏪 Loja Antônio Diego</option><option value="loja2">🏪 Loja Baturité</option></select></div>
-              <div class="field"><label>Volta pro estoque de</label><select id="tkVolta"><option value="loja1">🏪 Loja Antônio Diego</option><option value="loja2">🏪 Loja Baturité</option><option value="caminhao">🚚 Caminhão</option></select></div>
+              <div class="field"><label>Onde foi comprado</label><select id="tkLocal"><option value="caminhao">🚚 Caminhão</option><option value="loja1">🏪 Loja Antônio Diogo</option><option value="loja2">🏪 Loja Baturité</option></select></div>
+              <div class="field"><label>Volta pro estoque de</label><select id="tkVolta"><option value="loja1">🏪 Loja Antônio Diogo</option><option value="loja2">🏪 Loja Baturité</option><option value="caminhao">🚚 Caminhão</option></select></div>
               <div class="field"><label>Quantidade</label><input type="number" id="tkQt" value="1" min="1"/></div>
               <div class="field" style="grid-column:span 2"><label>Motivo</label>
                 <select id="tkMotivo"><option>Defeito</option><option>Tamanho/cor errado</option><option>Desistência</option><option>Veio errado</option><option>Outro</option></select>
@@ -1577,7 +1599,7 @@
         <div class="field"><label>Preço de venda (R$)</label><input type="number" id="npPreco" step="0.01" value="10.00"/></div>
         <div class="field"><label>Código de barras</label><input id="npCB" placeholder="bipe ou digite"/></div>
         <div class="field"><label>Estoque mínimo (alerta)</label><input type="number" id="npMin" value="10"/></div>
-        <div class="field"><label>🏪 Estoque A.Diego</label><input type="number" id="npEstL1" value="20"/></div>
+        <div class="field"><label>🏪 Estoque A.Diogo</label><input type="number" id="npEstL1" value="20"/></div>
         <div class="field"><label>🏪 Estoque Baturité</label><input type="number" id="npEstL2" value="20"/></div>
         <div class="field"><label>🚚 Estoque Caminhão</label><input type="number" id="npEstCam" value="20"/></div>
         <div class="field"><label>Foto (opcional)</label><input type="file" id="npFoto" accept="image/*"/></div>
@@ -1705,7 +1727,7 @@
           </select>
         </div>
         <div class="field" id="nuUniWrap"><label>Unidade do caixa</label>
-          <select id="nuUni"><option value="loja1">🏪 Loja Antônio Diego</option><option value="loja2">🏪 Loja Baturité</option><option value="caminhao">🚚 Caminhão</option></select>
+          <select id="nuUni"><option value="loja1">🏪 Loja Antônio Diogo</option><option value="loja2">🏪 Loja Baturité</option><option value="caminhao">🚚 Caminhão</option></select>
         </div>
       </div>
     </div>
@@ -1725,7 +1747,7 @@
         <div class="field"><label>Unidade</label>
           <select id="cxLocal" onchange="renderCaixa()">
             <option value="todos">Todas as unidades</option>
-            <option value="loja1">🏪 Loja Antônio Diego</option>
+            <option value="loja1">🏪 Loja Antônio Diogo</option>
             <option value="loja2">🏪 Loja Baturité</option>
             <option value="caminhao">🚚 Caminhão</option>
           </select>
@@ -1751,7 +1773,7 @@
    ESTADO + PERSISTÊNCIA
 ================================================================ */
 const STORE_KEY='lojaoEconomia_v4';
-const APP_VERSION='v16 · 17/06/2026';
+const APP_VERSION='v17 · 19/06/2026';
 /* Força baixar a versão mais recente, contornando o cache (funciona no celular) */
 function forcarAtualizacao(){
   try{Object.keys(sessionStorage).filter(k=>k.startsWith('upd_')).forEach(k=>sessionStorage.removeItem(k));}catch(e){}
@@ -1791,7 +1813,7 @@ const CLOUD_ENABLED = !!(firebaseConfig && firebaseConfig.apiKey && firebaseConf
 
 /* Unidades da empresa (mesma loja, três pontos de venda) */
 const LOCAIS={
-  loja1:{nome:'Loja Antônio Diego',emoji:'🏪',tipo:'loja'},
+  loja1:{nome:'Loja Antônio Diogo',emoji:'🏪',tipo:'loja'},
   loja2:{nome:'Loja Baturité',emoji:'🏪',tipo:'loja'},
   caminhao:{nome:'Caminhão',emoji:'🚚',tipo:'caminhao'}
 };
@@ -1876,6 +1898,20 @@ function diaSem(s){const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];retur
 function estTot(p){if(typeof p.estoque==='number')return p.estoque;return UNIDADES_KEYS.reduce((s,k)=>s+(p.estoque?.[k]||0),0)}
 function estLoc(p,local){if(typeof p.estoque==='number')return 0;return p.estoque?.[local]||0}
 function garanteEstoque(p){if(typeof p.estoque==='number'||!p.estoque)p.estoque={loja1:0,loja2:0,caminhao:0};UNIDADES_KEYS.forEach(k=>{if(p.estoque[k]==null)p.estoque[k]=0});return p.estoque}
+/* Corrige o nome antigo "Antônio Diego" -> "Antônio Diogo" SOMENTE na exibição
+   (não altera os dados gravados — seguro para a base de produção). */
+function fixNome(s){return typeof s==='string'?s.replace(/Ant[ôo]nio Diego/g,m=>m.slice(0,-5)+'Diogo'):s;}
+/* Rótulo de uma unidade tolerante a chaves antigas/desconhecidas (ex.: "loja" de versões passadas) */
+function locLabel(k){const l=LOCAIS[k];if(l)return l.emoji+' '+l.nome;if(k==='loja')return '🏪 Loja (registro antigo)';return k||'—';}
+/* Reparte o valor de uma venda por forma de pagamento.
+   Pagamento "misto" usa v.mix {pix,dinheiro,cartao}; os demais jogam o total na própria forma. */
+function pgBreak(v){
+  const o={pix:0,dinheiro:0,cartao:0};
+  if(!v)return o;
+  if(v.pagamento==='misto'&&v.mix){o.pix=+v.mix.pix||0;o.dinheiro=+v.mix.dinheiro||0;o.cartao=+v.mix.cartao||0;return o;}
+  const k=o[v.pagamento]!==undefined?v.pagamento:'dinheiro';
+  o[k]=+v.total||0;return o;
+}
 /* Lê imagem do <input type=file>, redimensiona e devolve dataURL (economiza espaço no localStorage) */
 function lerImagemRedim(file,maxLado,cb){
   if(!file)return cb('');
@@ -1911,7 +1947,7 @@ function seed(){
       {user:'rafael',senha:'rafael123',nome:'Rafael Freitas',role:'admin',unidade:''},
       {user:'hiellen',senha:'hiellen123',nome:'Hiellen Lima',role:'admin',unidade:''},
       {user:'samanta',senha:'samanta123',nome:'Samanta',role:'gestor',unidade:''},
-      {user:'antoniodiego',senha:'caixa123',nome:'Caixa Loja Antônio Diego',role:'caixa',unidade:'loja1'},
+      {user:'antoniodiego',senha:'caixa123',nome:'Caixa Loja Antônio Diogo',role:'caixa',unidade:'loja1'},
       {user:'baturite',senha:'caixa123',nome:'Caixa Loja Baturité',role:'caixa',unidade:'loja2'},
       {user:'caminhao',senha:'caixa123',nome:'Caixa do Caminhão',role:'caixa',unidade:'caminhao'},
     ],
@@ -1976,7 +2012,7 @@ function seed(){
       });
     }
     // Vendas das DUAS LOJAS FÍSICAS (movimento menor e fixo)
-    [['loja1','Loja Antônio Diego','Ana'],['loja2','Loja Baturité','Marcos']].forEach(([uni,cid,vend])=>{
+    [['loja1','Loja Antônio Diogo','Ana'],['loja2','Loja Baturité','Marcos']].forEach(([uni,cid,vend])=>{
       const numLoja=20+Math.floor(Math.random()*25);
       for(let v=0;v<numLoja;v++){
         const hora=8+Math.floor(Math.random()*10);
@@ -2313,7 +2349,7 @@ function applyPermissions(){
   const mgr=(role==='admin'||role==='gestor');
   document.querySelectorAll('.mgr-only').forEach(e=>e.style.display=mgr?'':'none');
   // cartão de usuário
-  document.getElementById('userNome').textContent=CURRENT.nome;
+  document.getElementById('userNome').textContent=fixNome(CURRENT.nome);
   document.getElementById('userRole').textContent=role==='admin'?'Administrador(a)':role==='gestor'?'Gestor(a)':'Caixa — '+(LOCAIS[CURRENT.unidade]?.nome||'');
   document.getElementById('userAvatar').textContent=CURRENT.nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   try{document.querySelector('.brand-text p').textContent='Painel · '+APP_VERSION;}catch(e){}
@@ -2687,13 +2723,31 @@ document.querySelectorAll('.pay-btn[data-pay]').forEach(b=>b.addEventListener('c
   b.classList.add('active');pagamentoSel=b.dataset.pay;
   document.getElementById('parcelasWrap').style.display=pagamentoSel==='cartao'?'block':'none';
   document.getElementById('trocoWrap').style.display=pagamentoSel==='dinheiro'?'block':'none';
+  document.getElementById('mistoWrap').style.display=pagamentoSel==='misto'?'block':'none';
   if(pagamentoSel==='cartao'){
     const sel=document.getElementById('pdvParcelas');const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
     sel.innerHTML=Array.from({length:10},(_,i)=>{const n=i+1;return `<option value="${n}">${n}x de ${fmtBR(tot/n)} ${n===1?'(à vista)':'sem juros'}</option>`}).join('');
   }
   if(pagamentoSel==='dinheiro'){document.getElementById('pdvRecebido').value='';renderTroco();}
+  if(pagamentoSel==='misto'){
+    // sugere metade no dinheiro e metade no cartão (caso mais comum)
+    const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
+    const metade=Math.round(tot/2*100)/100;
+    document.getElementById('mDinheiro').value=metade;
+    document.getElementById('mCartao').value=Math.round((tot-metade)*100)/100;
+    document.getElementById('mPix').value=0;
+    renderMisto();
+  }
   renderCart();
 }));
+/* Mostra o quanto já foi distribuído x o total, e sinaliza se bate */
+function renderMisto(){
+  const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
+  const soma=(+document.getElementById('mDinheiro').value||0)+(+document.getElementById('mCartao').value||0)+(+document.getElementById('mPix').value||0);
+  const el=document.getElementById('mistoStatus');
+  el.textContent=fmtBR(soma)+' / '+fmtBR(tot);
+  el.style.color=Math.abs(soma-tot)<0.01?'var(--verde)':'var(--vermelho)';
+}
 function renderTroco(){
   const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
   const rec=+document.getElementById('pdvRecebido').value||0;
@@ -2741,6 +2795,7 @@ function renderCart(){
     sel.innerHTML=Array.from({length:10},(_,i)=>{const n=i+1;return `<option value="${n}">${n}x de ${fmtBR(tot/n)} ${n===1?'(à vista)':'sem juros'}</option>`}).join('');
     sel.value=atual;
   }
+  if(pagamentoSel==='misto')renderMisto();
 }
 function esvaziarCarrinho(){carrinho=[];renderCart()}
 function finalizarVenda(){
@@ -2750,6 +2805,17 @@ function finalizarVenda(){
   const parcelas=pagamentoSel==='cartao'?(+document.getElementById('pdvParcelas').value||1):1;
   const recebido=pagamentoSel==='dinheiro'?(+document.getElementById('pdvRecebido').value||0):0;
   const troco=pagamentoSel==='dinheiro'&&recebido>total?recebido-total:0;
+  // pagamento MISTO: valida que a divisão bate com o total
+  let mix=null;
+  if(pagamentoSel==='misto'){
+    mix={
+      dinheiro:Math.round((+document.getElementById('mDinheiro').value||0)*100)/100,
+      cartao:Math.round((+document.getElementById('mCartao').value||0)*100)/100,
+      pix:Math.round((+document.getElementById('mPix').value||0)*100)/100
+    };
+    const soma=mix.dinheiro+mix.cartao+mix.pix;
+    if(Math.abs(soma-total)>0.01)return toast(`A soma das formas (${fmtBR(soma)}) precisa bater com o total (${fmtBR(total)})`,'error');
+  }
   const now=new Date();
   const venda={
     id:S.vendas.length+1,
@@ -2759,7 +2825,7 @@ function finalizarVenda(){
     cidade,
     itens:carrinho.map(c=>({prodId:c.prodId,nome:c.nome,qt:c.qt,preco:c.preco,emoji:c.emoji})),
     total,
-    pagamento:pagamentoSel,parcelas,recebido,troco,
+    pagamento:pagamentoSel,parcelas,recebido,troco,mix,
     vendedor:CURRENT?CURRENT.nome:'Caixa'
   };
   S.vendas.push(venda);
@@ -2770,7 +2836,12 @@ function finalizarVenda(){
     if(p){garanteEstoque(p);p.estoque[localPdv]=Math.max(0,(p.estoque[localPdv]||0)-c.qt);}
   });
   carrinho=[];
+  // volta o pagamento para PIX e esconde os painéis auxiliares (evita reaproveitar valores)
+  pagamentoSel='pix';
+  document.querySelectorAll('.pay-btn[data-pay]').forEach(x=>x.classList.toggle('active',x.dataset.pay==='pix'));
   document.getElementById('trocoWrap').style.display='none';
+  document.getElementById('mistoWrap').style.display='none';
+  document.getElementById('parcelasWrap').style.display='none';
   save();renderPdv();
   const msgParc=pagamentoSel==='cartao'&&parcelas>1?` em ${parcelas}x`:'';
   const msgTroco=troco>0?` · troco ${fmtBR(troco)}`:'';
@@ -2782,9 +2853,14 @@ let ultimaVenda=null;
 function imprimirCupom(){
   if(!ultimaVenda)return toast('Nenhuma venda recente para imprimir','error');
   const v=ultimaVenda;
-  const pg={pix:'PIX',dinheiro:'Dinheiro',cartao:'Cartão'+(v.parcelas>1?' '+v.parcelas+'x':'')}[v.pagamento]||v.pagamento;
+  const pg={pix:'PIX',dinheiro:'Dinheiro',cartao:'Cartão'+(v.parcelas>1?' '+v.parcelas+'x':''),misto:'Misto'}[v.pagamento]||v.pagamento;
   const linhas=v.itens.map(i=>`<tr><td>${i.qt}x ${i.nome}</td><td style="text-align:right">${fmtBR(i.preco*i.qt)}</td></tr>`).join('');
-  const extra=v.pagamento==='dinheiro'&&v.recebido?`<div class="flex" style="justify-content:space-between"><span>Recebido</span><span>${fmtBR(v.recebido)}</span></div><div class="flex" style="justify-content:space-between"><span>Troco</span><span>${fmtBR(v.troco)}</span></div>`:'';
+  let extra=v.pagamento==='dinheiro'&&v.recebido?`<div class="flex" style="justify-content:space-between"><span>Recebido</span><span>${fmtBR(v.recebido)}</span></div><div class="flex" style="justify-content:space-between"><span>Troco</span><span>${fmtBR(v.troco)}</span></div>`:'';
+  if(v.pagamento==='misto'&&v.mix){
+    if(v.mix.dinheiro>0)extra+=`<div class="flex" style="justify-content:space-between"><span>· Dinheiro</span><span>${fmtBR(v.mix.dinheiro)}</span></div>`;
+    if(v.mix.cartao>0)extra+=`<div class="flex" style="justify-content:space-between"><span>· Cartão</span><span>${fmtBR(v.mix.cartao)}</span></div>`;
+    if(v.mix.pix>0)extra+=`<div class="flex" style="justify-content:space-between"><span>· PIX</span><span>${fmtBR(v.mix.pix)}</span></div>`;
+  }
   const w=window.open('','_blank','width=380,height=600');
   w.document.write(`<html><head><title>Cupom</title><meta charset="utf-8"><style>
     body{font-family:'Courier New',monospace;color:#000;max-width:300px;margin:0 auto;padding:10px;font-size:12px}
@@ -2813,7 +2889,7 @@ function abrirCaixa(){
   // caixa só vê a própria unidade
   if(CURRENT&&CURRENT.role==='caixa'){document.getElementById('cxLocal').value=CURRENT.unidade;document.getElementById('cxLocal').disabled=true;}
   else{document.getElementById('cxLocal').value=localPdv;document.getElementById('cxLocal').disabled=false;}
-  document.getElementById('cxOperador').value=CURRENT?CURRENT.nome:'Gestão';
+  document.getElementById('cxOperador').value=CURRENT?fixNome(CURRENT.nome):'Gestão';
   renderCaixa();
   document.getElementById('modalCaixa').classList.add('show');
 }
@@ -2825,7 +2901,7 @@ function computeCaixa(){
   const total=vendas.reduce((s,v)=>s+v.total,0);
   const itens=vendas.reduce((s,v)=>s+v.itens.reduce((x,i)=>x+i.qt,0),0);
   const pg={pix:{v:0,n:0},dinheiro:{v:0,n:0},cartao:{v:0,n:0}};
-  vendas.forEach(v=>{const k=pg[v.pagamento]?v.pagamento:'dinheiro';pg[k].v+=v.total;pg[k].n++;});
+  vendas.forEach(v=>{const b=pgBreak(v);['pix','dinheiro','cartao'].forEach(k=>{if(b[k]>0){pg[k].v+=b[k];pg[k].n++;}});});
   // top produtos
   const pc={};
   vendas.forEach(v=>v.itens.forEach(i=>pc[i.nome]=(pc[i.nome]||0)+i.qt));
@@ -3161,7 +3237,7 @@ function renderVendas(){
   // Pagamento
   destroy('pag');
   const pgStats={pix:0,dinheiro:0,cartao:0};
-  vMes.forEach(v=>pgStats[v.pagamento]=(pgStats[v.pagamento]||0)+v.total);
+  vMes.forEach(v=>{const b=pgBreak(v);pgStats.pix+=b.pix;pgStats.dinheiro+=b.dinheiro;pgStats.cartao+=b.cartao;});
   charts.pag=new Chart(document.getElementById('chartPagamento'),{
     type:'doughnut',
     data:{labels:['PIX','Dinheiro','Cartão'],datasets:[{data:[pgStats.pix,pgStats.dinheiro,pgStats.cartao],
@@ -3180,34 +3256,74 @@ function renderVendas(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
   });
 
-  // Filtro
+  // Filtro de cidade (preserva a seleção atual ao re-renderizar)
   const sel=document.getElementById('filterCidadeVendas');
   const cids=[...new Set(S.vendas.map(v=>v.cidade))];
-  sel.innerHTML='<option value="">Todas cidades</option>'+cids.map(c=>`<option>${c}</option>`).join('');
-  sel.onchange=renderTblVendas;
-  renderTblVendas();
-
-  function renderTblVendas(){
-    const f=sel.value;
-    let arr=S.vendas.slice().reverse();
-    if(f)arr=arr.filter(v=>v.cidade===f);
-    arr=arr.slice(0,50);
-    document.getElementById('tblVendas').querySelector('tbody').innerHTML=arr.map(v=>{
-      let pgIco={pix:'📱 PIX',dinheiro:'💵 Dinheiro',cartao:'💳 Cartão'}[v.pagamento]||v.pagamento;
-      if(v.pagamento==='cartao'&&v.parcelas>1)pgIco+=` ${v.parcelas}x`;
-      const u=LOCAIS[v.local]||LOCAIS.caminhao;
-      const canal=`<span class="badge ${v.local==='caminhao'?'b-blue':'b-purple'}">${u.emoji} ${u.nome.replace('Loja ','')}</span>`;
-      return `<tr>
-        <td>${dataBR(v.data)} ${v.hora}</td>
-        <td>${canal}</td>
-        <td>${v.cidade}</td>
-        <td>${v.itens.reduce((s,i)=>s+i.qt,0)} un</td>
-        <td><strong>${fmtBR(v.total)}</strong></td>
-        <td>${pgIco}</td>
-        <td>${v.vendedor}</td>
-      </tr>`;
-    }).join('');
+  const atualCid=sel.value;
+  sel.innerHTML='<option value="">Todas cidades</option>'+cids.map(c=>`<option value="${c}" ${c===atualCid?'selected':''}>${fixNome(c)}</option>`).join('');
+  sel.onchange=renderTblVendasGlobal;
+  renderTblVendasGlobal();
+}
+/* Lista de vendas filtrada por DIA e/ou cidade.
+   Com um dia escolhido: mostra TODAS as vendas do dia (sem corte) + um resumo.
+   Sem dia: mostra as 50 mais recentes. */
+function renderTblVendasGlobal(){
+  const sel=document.getElementById('filterCidadeVendas');
+  const f=sel?sel.value:'';
+  const dia=(document.getElementById('filterDiaVendas')||{}).value||'';
+  let arr=S.vendas.slice().reverse();
+  if(f)arr=arr.filter(v=>v.cidade===f);
+  if(dia)arr=arr.filter(v=>v.data===dia);
+  // resumo do dia
+  const resumo=document.getElementById('vendasResumoDia');
+  if(resumo){
+    if(dia){
+      const tt=arr.reduce((s,v)=>s+v.total,0);
+      const b={pix:0,dinheiro:0,cartao:0};arr.forEach(v=>{const x=pgBreak(v);b.pix+=x.pix;b.dinheiro+=x.dinheiro;b.cartao+=x.cartao;});
+      const itensDia=arr.reduce((s,v)=>s+(v.itens||[]).reduce((x,i)=>x+i.qt,0),0);
+      resumo.style.display='';
+      resumo.innerHTML=`<span style="font-size:18px">📅</span><div><strong>${dataBR(dia)} (${diaSem(dia)})</strong> — ${arr.length} vendas · ${itensDia} itens · <strong>${fmtBR(tt)}</strong><br><span style="font-size:12px">📱 PIX ${fmtBR(b.pix)} · 💵 Dinheiro ${fmtBR(b.dinheiro)} · 💳 Cartão ${fmtBR(b.cartao)}</span></div>`;
+    }else resumo.style.display='none';
   }
+  if(!dia)arr=arr.slice(0,50);
+  document.getElementById('tblVendas').querySelector('tbody').innerHTML=arr.map(v=>{
+    let pgIco={pix:'📱 PIX',dinheiro:'💵 Dinheiro',cartao:'💳 Cartão',misto:'➗ Misto'}[v.pagamento]||v.pagamento;
+    if(v.pagamento==='cartao'&&v.parcelas>1)pgIco+=` ${v.parcelas}x`;
+    if(v.pagamento==='misto'&&v.mix){const ps=[];if(v.mix.dinheiro>0)ps.push('💵'+fmtBRk(v.mix.dinheiro));if(v.mix.cartao>0)ps.push('💳'+fmtBRk(v.mix.cartao));if(v.mix.pix>0)ps.push('📱'+fmtBRk(v.mix.pix));pgIco+=` <span style="font-size:11px;color:var(--cinza-mute)">(${ps.join(' + ')})</span>`;}
+    const u=LOCAIS[v.local]||LOCAIS.caminhao;
+    const canal=`<span class="badge ${v.local==='caminhao'?'b-blue':'b-purple'}">${u.emoji} ${u.nome.replace('Loja ','')}</span>`;
+    return `<tr>
+      <td>${dataBR(v.data)} ${v.hora||''}</td>
+      <td>${canal}</td>
+      <td>${fixNome(v.cidade)||'—'}</td>
+      <td>${(v.itens||[]).reduce((s,i)=>s+i.qt,0)} un</td>
+      <td><strong>${fmtBR(v.total)}</strong></td>
+      <td>${pgIco}</td>
+      <td>${fixNome(v.vendedor)||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" class="text-mute" style="text-align:center;padding:20px">Nenhuma venda neste filtro.</td></tr>';
+}
+/* Exporta as vendas atualmente filtradas (dia/cidade) para um arquivo .csv */
+function exportarVendas(){
+  const sel=document.getElementById('filterCidadeVendas');
+  const f=sel?sel.value:'';
+  const dia=(document.getElementById('filterDiaVendas')||{}).value||'';
+  let arr=S.vendas.slice();
+  if(f)arr=arr.filter(v=>v.cidade===f);
+  if(dia)arr=arr.filter(v=>v.data===dia);
+  if(!arr.length)return toast('Nenhuma venda para exportar neste filtro','error');
+  const linhas=[['Data','Hora','Canal','Cidade/Local','Itens','Total','Pagamento','Vendedor']];
+  arr.forEach(v=>{
+    const itens=(v.itens||[]).map(i=>`${i.qt}x ${i.nome}`).join(' | ');
+    let pg=v.pagamento;
+    if(v.pagamento==='misto'&&v.mix)pg=`misto (din ${v.mix.dinheiro}/cart ${v.mix.cartao}/pix ${v.mix.pix})`;
+    linhas.push([dataBR(v.data),v.hora||'',(LOCAIS[v.local]||{}).nome||v.local||'',fixNome(v.cidade)||'',itens,(v.total||0).toFixed(2),pg,fixNome(v.vendedor)||'']);
+  });
+  const csv=linhas.map(l=>l.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='vendas-'+(dia||'todas')+'.csv';a.click();
+  toast('Vendas exportadas ✅','success');
 }
 
 /* ================================================================
@@ -3623,22 +3739,27 @@ let transferItens=[];
 function renderTransfer(){
   document.getElementById('trData').value=hoje();
   transferItens=[];
+  const tb=document.getElementById('trBusca');if(tb)tb.value='';
   renderTransferProdOptions();
   renderTransferItens();
-  // histórico
+  // histórico (tolerante a registros antigos com local desconhecido, ex.: "loja")
   document.getElementById('tblTransfer').querySelector('tbody').innerHTML=S.transferencias.slice().reverse().map(t=>`
     <tr>
       <td>${dataBR(t.data)}</td>
-      <td>${LOCAIS[t.de].emoji} ${LOCAIS[t.de].nome}</td>
-      <td>${LOCAIS[t.para].emoji} ${LOCAIS[t.para].nome}</td>
-      <td>${t.itens.map(i=>`${i.qt}x ${i.nome}`).join(', ')}</td>
+      <td>${locLabel(t.de)}</td>
+      <td>${locLabel(t.para)}</td>
+      <td>${(t.itens||[]).map(i=>`${i.qt}x ${i.nome}`).join(', ')}</td>
       <td>${t.obs||'—'}</td>
     </tr>`).join('')||'<tr><td colspan="5" class="text-mute" style="text-align:center;padding:20px">Nenhuma transferência ainda</td></tr>';
   renderBalanceamento();
 }
 function renderTransferProdOptions(){
   const de=document.getElementById('trDe').value;
-  document.getElementById('trProd').innerHTML=S.produtos.map(p=>`<option value="${p.id}">${p.emoji} ${p.nome} (${estLoc(p,de)} disp.)</option>`).join('');
+  const q=((document.getElementById('trBusca')||{}).value||'').trim().toLowerCase();
+  const lista=S.produtos.filter(p=>!q||(p.nome||'').toLowerCase().includes(q)||(p.codBarras||'').toLowerCase().includes(q));
+  document.getElementById('trProd').innerHTML=lista.length
+    ?lista.map(p=>`<option value="${p.id}">${p.emoji} ${p.nome} (${estLoc(p,de)} disp.)</option>`).join('')
+    :'<option value="">— nenhum produto encontrado —</option>';
 }
 function addItemTransfer(){
   const id=+document.getElementById('trProd').value;
@@ -4107,7 +4228,7 @@ function salvarAbastecimento(){
 function renderUsuarios(){
   document.getElementById('tblUsuarios').querySelector('tbody').innerHTML=S.usuarios.map((u,i)=>`
     <tr>
-      <td><strong>${u.nome}</strong></td>
+      <td><strong>${fixNome(u.nome)}</strong></td>
       <td>${u.user}</td>
       <td><span class="text-mute">${u.senha}</span></td>
       <td><span class="badge ${u.role==='admin'?'b-purple':u.role==='gestor'?'b-blue':'b-green'}">${u.role}</span></td>
