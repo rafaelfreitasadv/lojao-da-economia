@@ -720,6 +720,7 @@
       <div class="nav-item" data-page="estoque" data-unidade="caminhao"><span class="ico">🚚</span> Estoque Caminhão <span class="nav-badge" id="badgeEst-caminhao">0</span></div>
       <div class="nav-item" data-page="transferencias"><span class="ico">🔄</span> Transferências</div>
       <div class="nav-item" data-page="trocas"><span class="ico">↩️</span> Trocas & Devoluções</div>
+      <div class="nav-item" data-page="fiado"><span class="ico">📝</span> Fiado (a receber) <span class="nav-badge" id="badgeFiado" style="display:none">0</span></div>
       <div class="nav-item" data-page="clientes"><span class="ico">❤️</span> Clientes & Fidelidade</div>
     </div>
 
@@ -1004,6 +1005,7 @@
                   <button class="pay-btn" data-pay="dinheiro"><span class="ico">💵</span>Dinheiro</button>
                   <button class="pay-btn" data-pay="cartao"><span class="ico">💳</span>Cartão</button>
                   <button class="pay-btn" data-pay="misto"><span class="ico">➗</span>Misto</button>
+                  <button class="pay-btn" data-pay="fiado"><span class="ico">📝</span>Fiado</button>
                 </div>
                 <div class="field" id="parcelasWrap" style="display:none;margin-bottom:10px">
                   <label>Parcelas (até 10x sem juros)</label>
@@ -1019,6 +1021,11 @@
                   <div class="field" style="margin-bottom:8px"><label>💳 No cartão (R$)</label><input type="number" id="mCartao" step="0.01" value="0" oninput="renderMisto()"/></div>
                   <div class="field" style="margin-bottom:8px"><label>📱 No PIX (R$)</label><input type="number" id="mPix" step="0.01" value="0" oninput="renderMisto()"/></div>
                   <div class="flex justify-between" style="font-size:13px;padding:4px 2px"><span class="text-mute">Somado / Total</span><strong id="mistoStatus">R$ 0,00 / R$ 0,00</strong></div>
+                </div>
+                <div id="fiadoWrap" style="display:none;margin-bottom:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:10px">
+                  <div style="font-size:11.5px;color:var(--cinza-mute);margin-bottom:8px">📝 Venda fiado — o valor entra como <strong>a receber</strong> (não conta como dinheiro no caixa). Receba depois na aba <strong>Fiado</strong>.</div>
+                  <div class="field" style="margin-bottom:8px"><label>Nome do cliente *</label><input id="fiadoNome" placeholder="Ex: Maria da esquina"/></div>
+                  <div class="field"><label>WhatsApp (opcional)</label><input id="fiadoWa" placeholder="Ex: 85 9 9999-0000"/></div>
                 </div>
                 <button class="btn btn-success" style="width:100%;justify-content:center;padding:12px" onclick="finalizarVenda()">✅ Finalizar Venda</button>
                 <div class="flex gap-12" style="margin-top:6px">
@@ -1186,7 +1193,7 @@
           <div id="vendasResumoDia" class="alert-box info" style="display:none;margin-bottom:12px"></div>
           <div class="scroll-x">
             <table class="tbl" id="tblVendas">
-              <thead><tr><th>Data/Hora</th><th>Canal</th><th>Cidade / Local</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Vendedor</th></tr></thead>
+              <thead><tr><th>Data/Hora</th><th>Canal</th><th>Cidade / Local</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Vendedor</th><th></th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -1377,6 +1384,33 @@
         </div>
       </section>
 
+      <!-- ============================ FIADO ============================ -->
+      <section class="page" id="page-fiado">
+        <div class="kpi-grid">
+          <div class="kpi red"><div class="kpi-head"><div class="kpi-label">Total a receber</div><div class="kpi-icon">📝</div></div><div class="kpi-value" id="fiAReceber">R$ 0</div></div>
+          <div class="kpi gold"><div class="kpi-head"><div class="kpi-label">Clientes devendo</div><div class="kpi-icon">👤</div></div><div class="kpi-value" id="fiClientes">0</div></div>
+          <div class="kpi green"><div class="kpi-head"><div class="kpi-label">Recebido (mês)</div><div class="kpi-icon">✅</div></div><div class="kpi-value" id="fiRecebido">R$ 0</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><span class="ico">📝</span> Fiados em aberto</div><div class="panel-sub">Quem comprou fiado e ainda deve — registre o pagamento quando receber</div></div></div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblFiadoAberto">
+              <thead><tr><th>Data</th><th>Cliente</th><th>WhatsApp</th><th>Itens</th><th>Total</th><th>Pago</th><th>Falta</th><th>Ações</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><span class="ico">✅</span> Fiados quitados</div></div></div>
+          <div class="scroll-x">
+            <table class="tbl" id="tblFiadoQuitado">
+              <thead><tr><th>Data</th><th>Cliente</th><th>Total</th><th>Quitado em</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- ============================ CLIENTES ============================ -->
       <section class="page" id="page-clientes">
         <div class="alert-box info">
@@ -1487,7 +1521,7 @@
           </div>
           <div class="scroll-x">
             <table class="tbl" id="tblEquipe">
-              <thead><tr><th>Nome</th><th>Função</th><th>Salário fixo</th><th>Comissão %</th><th>Vendas (mês)</th><th>A receber</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Nome</th><th>Função</th><th>Salário fixo</th><th>Comissão %</th><th>Vendas (mês)</th><th>Comissão (mês)</th><th>A receber</th><th>Ações</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -1546,8 +1580,14 @@
             <span class="badge b-green">Ativo</span>
           </div>
           <div class="setting-row">
-            <div class="setting-info"><strong>Exportar tudo</strong><span>Baixa um JSON com todos os dados do sistema</span></div>
-            <button class="btn btn-ghost btn-sm" onclick="exportarTudo()">📥 Baixar backup</button>
+            <div class="setting-info"><strong>Backup completo</strong><span>Baixa um arquivo com TODOS os dados (guarde de vez em quando)</span></div>
+            <button class="btn btn-primary btn-sm" onclick="exportarTudo()">📥 Baixar backup</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Restaurar backup</strong><span>Recupera os dados a partir de um arquivo de backup (.json)</span></div>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">♻️ Restaurar arquivo
+              <input type="file" accept="application/json,.json" onchange="restaurarBackup(this)" style="display:none"/>
+            </label>
           </div>
           <div class="setting-row">
             <div class="setting-info"><strong>Resetar dados</strong><span>Apaga TUDO e volta para o sistema vazio</span></div>
@@ -1754,6 +1794,10 @@
         </div>
         <div class="field"><label>Operador(a)</label><input id="cxOperador" value="Hiellen Lima"/></div>
       </div>
+      <div class="flex gap-12" style="flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn btn-ghost btn-sm" onclick="registrarMovCaixa('sangria')">➖ Sangria (retirar dinheiro)</button>
+        <button class="btn btn-ghost btn-sm" onclick="registrarMovCaixa('suprimento')">➕ Suprimento (colocar troco)</button>
+      </div>
       <div id="caixaReport"></div>
     </div>
     <div class="modal-foot">
@@ -1773,7 +1817,7 @@
    ESTADO + PERSISTÊNCIA
 ================================================================ */
 const STORE_KEY='lojaoEconomia_v4';
-const APP_VERSION='v17 · 19/06/2026';
+const APP_VERSION='v18 · 19/06/2026';
 /* Força baixar a versão mais recente, contornando o cache (funciona no celular) */
 function forcarAtualizacao(){
   try{Object.keys(sessionStorage).filter(k=>k.startsWith('upd_')).forEach(k=>sessionStorage.removeItem(k));}catch(e){}
@@ -1822,8 +1866,8 @@ const UNIDADES_KEYS=['loja1','loja2','caminhao'];
 /* Perfis de acesso e quais páginas cada um enxerga */
 const PERMISSOES={
   admin:'*',
-  gestor:['dashboard','pdv','rota','cidades','diario','vendas','produtos','estoque','transferencias','trocas','clientes','financeiro','despesas','metas','equipe','caminhao','combustivel'],
-  caixa:['pdv','vendas','produtos','estoque','transferencias','trocas','clientes','combustivel']
+  gestor:['dashboard','pdv','rota','cidades','diario','vendas','produtos','estoque','transferencias','trocas','fiado','clientes','financeiro','despesas','metas','equipe','caminhao','combustivel'],
+  caixa:['pdv','vendas','produtos','estoque','transferencias','trocas','fiado','clientes','combustivel']
 };
 
 const CIDADES_BASE=[
@@ -1908,6 +1952,7 @@ function locLabel(k){const l=LOCAIS[k];if(l)return l.emoji+' '+l.nome;if(k==='lo
 function pgBreak(v){
   const o={pix:0,dinheiro:0,cartao:0};
   if(!v)return o;
+  if(v.pagamento==='fiado')return o; // fiado não entra como dinheiro recebido
   if(v.pagamento==='misto'&&v.mix){o.pix=+v.mix.pix||0;o.dinheiro=+v.mix.dinheiro||0;o.cartao=+v.mix.cartao||0;return o;}
   const k=o[v.pagamento]!==undefined?v.pagamento:'dinheiro';
   o[k]=+v.total||0;return o;
@@ -2240,7 +2285,7 @@ function cloudInit(onReady){
 (function normaliza(){
   const base=seed();
   if(!Array.isArray(S.usuarios)||!S.usuarios.length)S.usuarios=base.usuarios;
-  ['vendas','despesas','entradas','transferencias','trocas','abastecimentos','fechamentos','clientes','diario','produtos','equipe','cidades','manutencoes'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=base[k]||[];});
+  ['vendas','despesas','entradas','transferencias','trocas','abastecimentos','fechamentos','clientes','diario','produtos','equipe','cidades','manutencoes','movCaixa','estornos','fiados'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=base[k]||[];});
   if(!S.config)S.config=base.config;
   if(!S.metas)S.metas=base.metas;
   if(!S.caminhao)S.caminhao=base.caminhao;
@@ -2379,6 +2424,7 @@ const PAGES={
   estoque:['Estoque','Posição do estoque + alimentar estoque'],
   transferencias:['Transferências','Mover produtos entre as unidades'],
   trocas:['Trocas & Devoluções','Registro de trocas com a origem da compra'],
+  fiado:['Fiado (a receber)','Vendas no fiado e baixa de pagamentos'],
   clientes:['Clientes & Fidelidade','Base + disparo WhatsApp para retorno à cidade'],
   financeiro:['Financeiro / DRE','Receitas, despesas, lucro e margem'],
   despesas:['Despesas','Lançamentos e controle por categoria'],
@@ -2408,6 +2454,7 @@ function goPage(p,unidade){
   if(p==='estoque')renderEstoque(unidade||estUnidade);
   if(p==='transferencias')renderTransfer();
   if(p==='trocas')renderTrocas();
+  if(p==='fiado')renderFiado();
   if(p==='clientes')renderClientes();
   if(p==='financeiro')renderFinanceiro();
   if(p==='despesas')renderDespesas();
@@ -2629,6 +2676,7 @@ function renderDash(){
     const b=document.getElementById('badgeEst-'+u);
     if(b){b.textContent=n;b.style.display=n?'inline-block':'none';}
   });
+  atualizaBadgeFiado();
 }
 
 /* ================================================================
@@ -2724,6 +2772,7 @@ document.querySelectorAll('.pay-btn[data-pay]').forEach(b=>b.addEventListener('c
   document.getElementById('parcelasWrap').style.display=pagamentoSel==='cartao'?'block':'none';
   document.getElementById('trocoWrap').style.display=pagamentoSel==='dinheiro'?'block':'none';
   document.getElementById('mistoWrap').style.display=pagamentoSel==='misto'?'block':'none';
+  document.getElementById('fiadoWrap').style.display=pagamentoSel==='fiado'?'block':'none';
   if(pagamentoSel==='cartao'){
     const sel=document.getElementById('pdvParcelas');const tot=carrinho.reduce((s,i)=>s+i.preco*i.qt,0);
     sel.innerHTML=Array.from({length:10},(_,i)=>{const n=i+1;return `<option value="${n}">${n}x de ${fmtBR(tot/n)} ${n===1?'(à vista)':'sem juros'}</option>`}).join('');
@@ -2816,9 +2865,16 @@ function finalizarVenda(){
     const soma=mix.dinheiro+mix.cartao+mix.pix;
     if(Math.abs(soma-total)>0.01)return toast(`A soma das formas (${fmtBR(soma)}) precisa bater com o total (${fmtBR(total)})`,'error');
   }
+  // pagamento FIADO: exige nome do cliente
+  let fiadoCliente=null;
+  if(pagamentoSel==='fiado'){
+    const nome=document.getElementById('fiadoNome').value.trim();
+    if(!nome)return toast('Informe o nome do cliente para vender fiado','error');
+    fiadoCliente={nome,wa:document.getElementById('fiadoWa').value.trim()};
+  }
   const now=new Date();
   const venda={
-    id:S.vendas.length+1,
+    id:Math.max(0,...S.vendas.map(v=>v.id||0),0)+1,
     data:hoje(),
     hora:`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
     local:localPdv,
@@ -2826,10 +2882,22 @@ function finalizarVenda(){
     itens:carrinho.map(c=>({prodId:c.prodId,nome:c.nome,qt:c.qt,preco:c.preco,emoji:c.emoji})),
     total,
     pagamento:pagamentoSel,parcelas,recebido,troco,mix,
+    cliente:fiadoCliente,
     vendedor:CURRENT?CURRENT.nome:'Caixa'
   };
   S.vendas.push(venda);
   ultimaVenda=venda;
+  // FIADO: cria o registro a receber, vinculado à venda
+  if(pagamentoSel==='fiado'&&fiadoCliente){
+    if(!Array.isArray(S.fiados))S.fiados=[];
+    S.fiados.push({
+      id:Math.max(0,...S.fiados.map(f=>f.id||0),0)+1,
+      data:venda.data,hora:venda.hora,vendaId:venda.id,
+      cliente:fiadoCliente,local:localPdv,
+      valor:total,pago:0,quitado:false,pagamentos:[],
+      itens:venda.itens
+    });
+  }
   // Baixa estoque do LOCAL onde a venda aconteceu
   carrinho.forEach(c=>{
     const p=S.produtos.find(x=>x.id===c.prodId);
@@ -2842,6 +2910,8 @@ function finalizarVenda(){
   document.getElementById('trocoWrap').style.display='none';
   document.getElementById('mistoWrap').style.display='none';
   document.getElementById('parcelasWrap').style.display='none';
+  document.getElementById('fiadoWrap').style.display='none';
+  document.getElementById('fiadoNome').value='';document.getElementById('fiadoWa').value='';
   save();renderPdv();
   const msgParc=pagamentoSel==='cartao'&&parcelas>1?` em ${parcelas}x`:'';
   const msgTroco=troco>0?` · troco ${fmtBR(troco)}`:'';
@@ -2853,7 +2923,7 @@ let ultimaVenda=null;
 function imprimirCupom(){
   if(!ultimaVenda)return toast('Nenhuma venda recente para imprimir','error');
   const v=ultimaVenda;
-  const pg={pix:'PIX',dinheiro:'Dinheiro',cartao:'Cartão'+(v.parcelas>1?' '+v.parcelas+'x':''),misto:'Misto'}[v.pagamento]||v.pagamento;
+  const pg={pix:'PIX',dinheiro:'Dinheiro',cartao:'Cartão'+(v.parcelas>1?' '+v.parcelas+'x':''),misto:'Misto',fiado:'FIADO'+(v.cliente?' - '+v.cliente.nome:'')}[v.pagamento]||v.pagamento;
   const linhas=v.itens.map(i=>`<tr><td>${i.qt}x ${i.nome}</td><td style="text-align:right">${fmtBR(i.preco*i.qt)}</td></tr>`).join('');
   let extra=v.pagamento==='dinheiro'&&v.recebido?`<div class="flex" style="justify-content:space-between"><span>Recebido</span><span>${fmtBR(v.recebido)}</span></div><div class="flex" style="justify-content:space-between"><span>Troco</span><span>${fmtBR(v.troco)}</span></div>`:'';
   if(v.pagamento==='misto'&&v.mix){
@@ -2908,12 +2978,18 @@ function computeCaixa(){
   const top=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   // por unidade
   const porUni=UNIDADES_KEYS.map(u=>{const vs=vendas.filter(v=>(v.local||'caminhao')===u);return {u,rec:vs.reduce((s,v)=>s+v.total,0),n:vs.length};});
+  // sangrias / suprimentos do dia (movimentações de dinheiro no caixa)
+  let movs=(S.movCaixa||[]).filter(m=>m.data===data);
+  if(filtro!=='todos')movs=movs.filter(m=>(m.local||'')===filtro);
+  const sangrias=movs.filter(m=>m.tipo==='sangria').reduce((s,m)=>s+(+m.valor||0),0);
+  const suprimentos=movs.filter(m=>m.tipo==='suprimento').reduce((s,m)=>s+(+m.valor||0),0);
+  const dinheiroEmCaixa=pg.dinheiro.v+suprimentos-sangrias; // esperado na gaveta
   // label
   let localLabel;
   if(filtro==='caminhao')localLabel='🚚 Caminhão — '+(S.rota[data]||'cidade não definida');
   else if(LOCAIS[filtro])localLabel=LOCAIS[filtro].emoji+' '+LOCAIS[filtro].nome;
   else localLabel='Todas as unidades';
-  return {data,filtro,vendas,total,itens,pg,top,localLabel,porUni,
+  return {data,filtro,vendas,total,itens,pg,top,localLabel,porUni,movs,sangrias,suprimentos,dinheiroEmCaixa,
     nVendas:vendas.length,ticket:vendas.length?total/vendas.length:0};
 }
 function renderCaixa(){
@@ -2954,6 +3030,13 @@ function renderCaixa(){
         </tbody>
       </table>
       ${linhasCanal}
+      ${(c.sangrias||c.suprimentos)?`
+      <div class="divider"></div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px">💰 Caixa em dinheiro</div>
+      <div class="flex justify-between" style="font-size:12.5px;margin-bottom:4px"><span>Vendas em dinheiro</span><span>${fmtBR(c.pg.dinheiro.v)}</span></div>
+      <div class="flex justify-between" style="font-size:12.5px;margin-bottom:4px"><span>➕ Suprimentos (troco)</span><span>${fmtBR(c.suprimentos)}</span></div>
+      <div class="flex justify-between" style="font-size:12.5px;margin-bottom:4px"><span>➖ Sangrias (retiradas)</span><span>${fmtBR(c.sangrias)}</span></div>
+      <div class="flex justify-between" style="font-size:14px;font-weight:700;border-top:1px dashed var(--cinza-borda);padding-top:6px;margin-top:4px"><span>= Esperado na gaveta</span><span>${fmtBR(c.dinheiroEmCaixa)}</span></div>`:''}
 
       <div style="font-weight:700;font-size:13px;margin:14px 0 8px">🏆 Produtos mais vendidos</div>
       ${c.top.length?c.top.map((t,i)=>`<div class="flex justify-between" style="font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--cinza-borda)"><span>${i+1}. ${t[0]}</span><strong>${t[1]} un.</strong></div>`).join(''):'<div class="text-mute" style="font-size:12px">Nenhuma venda neste dia/canal.</div>'}
@@ -3001,6 +3084,22 @@ function imprimirCaixa(){
     </body></html>`);
   w.document.close();
   setTimeout(()=>{try{w.print()}catch(e){}},400);
+}
+/* Registra sangria (retirada) ou suprimento (entrada de troco) no caixa do dia/unidade */
+function registrarMovCaixa(tipo){
+  const filtro=document.getElementById('cxLocal').value;
+  if(filtro==='todos')return toast('Escolha a unidade antes de registrar','error');
+  const data=document.getElementById('cxData').value;
+  const label=tipo==='sangria'?'SANGRIA (retirar dinheiro do caixa)':'SUPRIMENTO (colocar troco no caixa)';
+  const valStr=prompt(label+'\n\nValor (R$):');
+  if(valStr===null)return;
+  const valor=+String(valStr).replace(',','.')||0;
+  if(valor<=0)return toast('Valor inválido','error');
+  const motivo=prompt('Motivo (opcional):')||'';
+  if(!Array.isArray(S.movCaixa))S.movCaixa=[];
+  S.movCaixa.push({id:Math.max(0,...S.movCaixa.map(m=>m.id||0),0)+1,data,local:filtro,tipo,valor,motivo,por:CURRENT?fixNome(CURRENT.nome):'',hora:new Date().toLocaleTimeString('pt-BR')});
+  save();renderCaixa();
+  toast((tipo==='sangria'?'Sangria':'Suprimento')+' de '+fmtBR(valor)+' registrado ✅','success');
 }
 function fecharCaixaDia(){
   const c=computeCaixa();
@@ -3283,12 +3382,25 @@ function renderTblVendasGlobal(){
       const itensDia=arr.reduce((s,v)=>s+(v.itens||[]).reduce((x,i)=>x+i.qt,0),0);
       resumo.style.display='';
       resumo.innerHTML=`<span style="font-size:18px">📅</span><div><strong>${dataBR(dia)} (${diaSem(dia)})</strong> — ${arr.length} vendas · ${itensDia} itens · <strong>${fmtBR(tt)}</strong><br><span style="font-size:12px">📱 PIX ${fmtBR(b.pix)} · 💵 Dinheiro ${fmtBR(b.dinheiro)} · 💳 Cartão ${fmtBR(b.cartao)}</span></div>`;
-    }else resumo.style.display='none';
+    }else{
+      // sem dia escolhido: resumo dos últimos 7 dias com venda (clicável)
+      const base=f?S.vendas.filter(v=>v.cidade===f):S.vendas;
+      const porDia={};
+      base.forEach(v=>{if(!porDia[v.data])porDia[v.data]={n:0,t:0};porDia[v.data].n++;porDia[v.data].t+=v.total;});
+      const dias=Object.keys(porDia).sort().reverse().slice(0,7);
+      if(dias.length){
+        resumo.style.display='';
+        resumo.innerHTML=`<span style="font-size:18px">📅</span><div style="flex:1"><strong>Vendas por dia</strong> <span style="font-size:11.5px;color:var(--cinza-mute)">— toque num dia para ver todas as vendas dele</span>`+
+          dias.map(d=>`<div class="flex justify-between" style="font-size:12.5px;padding:4px 0;cursor:pointer;border-bottom:1px dashed var(--cinza-borda)" onclick="document.getElementById('filterDiaVendas').value='${d}';renderTblVendasGlobal()"><span>${dataBR(d)} (${diaSem(d)})</span><span>${porDia[d].n} vendas · <strong>${fmtBR(porDia[d].t)}</strong></span></div>`).join('')+`</div>`;
+      }else resumo.style.display='none';
+    }
   }
   if(!dia)arr=arr.slice(0,50);
+  const podeEstornar=CURRENT&&(CURRENT.role==='admin'||CURRENT.role==='gestor');
   document.getElementById('tblVendas').querySelector('tbody').innerHTML=arr.map(v=>{
-    let pgIco={pix:'📱 PIX',dinheiro:'💵 Dinheiro',cartao:'💳 Cartão',misto:'➗ Misto'}[v.pagamento]||v.pagamento;
+    let pgIco={pix:'📱 PIX',dinheiro:'💵 Dinheiro',cartao:'💳 Cartão',misto:'➗ Misto',fiado:'📝 Fiado'}[v.pagamento]||v.pagamento;
     if(v.pagamento==='cartao'&&v.parcelas>1)pgIco+=` ${v.parcelas}x`;
+    if(v.pagamento==='fiado'&&v.cliente)pgIco+=` <span style="font-size:11px;color:var(--cinza-mute)">(${v.cliente.nome})</span>`;
     if(v.pagamento==='misto'&&v.mix){const ps=[];if(v.mix.dinheiro>0)ps.push('💵'+fmtBRk(v.mix.dinheiro));if(v.mix.cartao>0)ps.push('💳'+fmtBRk(v.mix.cartao));if(v.mix.pix>0)ps.push('📱'+fmtBRk(v.mix.pix));pgIco+=` <span style="font-size:11px;color:var(--cinza-mute)">(${ps.join(' + ')})</span>`;}
     const u=LOCAIS[v.local]||LOCAIS.caminhao;
     const canal=`<span class="badge ${v.local==='caminhao'?'b-blue':'b-purple'}">${u.emoji} ${u.nome.replace('Loja ','')}</span>`;
@@ -3300,8 +3412,24 @@ function renderTblVendasGlobal(){
       <td><strong>${fmtBR(v.total)}</strong></td>
       <td>${pgIco}</td>
       <td>${fixNome(v.vendedor)||'—'}</td>
+      <td>${podeEstornar?`<button class="btn btn-ghost btn-sm" title="Estornar venda (devolve o estoque)" onclick="estornarVenda(${v.id})">↩️</button>`:''}</td>
     </tr>`;
-  }).join('')||'<tr><td colspan="7" class="text-mute" style="text-align:center;padding:20px">Nenhuma venda neste filtro.</td></tr>';
+  }).join('')||'<tr><td colspan="8" class="text-mute" style="text-align:center;padding:20px">Nenhuma venda neste filtro.</td></tr>';
+}
+/* Estorna (cancela) uma venda: devolve o estoque ao local e remove dos relatórios.
+   Guarda um registro em S.estornos para histórico. Só gestor/admin. */
+function estornarVenda(id){
+  const v=S.vendas.find(x=>x.id===id);if(!v)return;
+  if(!(CURRENT&&(CURRENT.role==='admin'||CURRENT.role==='gestor')))return toast('Apenas gestores podem estornar','error');
+  const ondeVolta=(LOCAIS[v.local]||{}).nome||v.local||'estoque';
+  if(!confirm(`Estornar a venda de ${fmtBR(v.total)} (${dataBR(v.data)} ${v.hora||''})?\n\n• O estoque dos itens volta para ${ondeVolta}\n• A venda sai dos relatórios\n\nEsta ação não pode ser desfeita.`))return;
+  (v.itens||[]).forEach(it=>{const p=S.produtos.find(x=>x.id===it.prodId);if(p&&LOCAIS[v.local]){garanteEstoque(p);p.estoque[v.local]=(p.estoque[v.local]||0)+it.qt;}});
+  if(!Array.isArray(S.estornos))S.estornos=[];
+  S.estornos.push({data:hoje(),hora:new Date().toLocaleTimeString('pt-BR'),vendaId:v.id,vendaData:v.data,total:v.total,local:v.local,pagamento:v.pagamento,por:CURRENT?CURRENT.nome:'',itens:v.itens});
+  S.vendas=S.vendas.filter(x=>x.id!==id);
+  save();
+  renderTblVendasGlobal();
+  toast('Venda estornada e estoque devolvido ✅','success');
 }
 /* Exporta as vendas atualmente filtradas (dia/cidade) para um arquivo .csv */
 function exportarVendas(){
@@ -3848,6 +3976,76 @@ function renderTrocas(){
     <div class="city-rank"><div class="rank-num">${i+1}</div><div><div class="name">${n}</div></div><div></div><div class="val">${q}x</div></div>
   `).join(''):'<div class="text-mute" style="padding:16px">Sem trocas — ótimo sinal de qualidade!</div>';
 }
+
+/* ================================================================
+   FIADO (CREDIÁRIO) — vendas a receber
+================================================================ */
+function atualizaBadgeFiado(){
+  const badge=document.getElementById('badgeFiado');if(!badge)return;
+  const abertos=(S.fiados||[]).filter(f=>!f.quitado).length;
+  if(abertos){badge.style.display='';badge.textContent=abertos;}else badge.style.display='none';
+}
+function renderFiado(){
+  const fiados=S.fiados||[];
+  const abertos=fiados.filter(f=>!f.quitado);
+  const quitados=fiados.filter(f=>f.quitado);
+  const aReceber=abertos.reduce((s,f)=>s+(f.valor-(f.pago||0)),0);
+  const clientesDevendo=new Set(abertos.map(f=>((f.cliente&&f.cliente.nome)||'').toLowerCase())).size;
+  const mes=hoje().substring(0,7);
+  let recebidoMes=0;
+  fiados.forEach(f=>(f.pagamentos||[]).forEach(p=>{if((p.data||'').startsWith(mes))recebidoMes+=(+p.valor||0);}));
+  document.getElementById('fiAReceber').textContent=fmtBR(aReceber);
+  document.getElementById('fiClientes').textContent=clientesDevendo;
+  document.getElementById('fiRecebido').textContent=fmtBR(recebidoMes);
+  atualizaBadgeFiado();
+  document.getElementById('tblFiadoAberto').querySelector('tbody').innerHTML=abertos.slice().reverse().map(f=>{
+    const falta=f.valor-(f.pago||0);
+    const itens=(f.itens||[]).map(i=>`${i.qt}x ${i.nome}`).join(', ')||'—';
+    const wa=(f.cliente&&f.cliente.wa)||'';
+    const waLink=wa?`<a href="https://wa.me/55${wa.replace(/\D/g,'')}" target="_blank">${wa}</a>`:'—';
+    return `<tr>
+      <td>${dataBR(f.data)}</td>
+      <td><strong>${(f.cliente&&f.cliente.nome)||'—'}</strong></td>
+      <td>${waLink}</td>
+      <td style="font-size:12px">${itens}</td>
+      <td>${fmtBR(f.valor)}</td>
+      <td>${fmtBR(f.pago||0)}</td>
+      <td><strong style="color:var(--vermelho)">${fmtBR(falta)}</strong></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-success btn-sm" onclick="receberFiado(${f.id},false)">💵 Receber</button>
+        <button class="btn btn-ghost btn-sm" onclick="receberFiado(${f.id},true)">✅ Quitar</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" class="text-mute" style="text-align:center;padding:20px">Nenhum fiado em aberto 🎉</td></tr>';
+  document.getElementById('tblFiadoQuitado').querySelector('tbody').innerHTML=quitados.slice().reverse().slice(0,50).map(f=>`
+    <tr>
+      <td>${dataBR(f.data)}</td>
+      <td>${(f.cliente&&f.cliente.nome)||'—'}</td>
+      <td>${fmtBR(f.valor)}</td>
+      <td>${f.quitadoEm?dataBR(f.quitadoEm):'—'}</td>
+    </tr>`).join('')||'<tr><td colspan="4" class="text-mute" style="text-align:center;padding:20px">Nenhum fiado quitado ainda</td></tr>';
+}
+function receberFiado(id,quitarTudo){
+  const f=(S.fiados||[]).find(x=>x.id===id);if(!f)return;
+  const falta=f.valor-(f.pago||0);
+  let valor;
+  if(quitarTudo){
+    if(!confirm(`Quitar o fiado de ${(f.cliente&&f.cliente.nome)||'cliente'} (${fmtBR(falta)})?`))return;
+    valor=falta;
+  }else{
+    const s=prompt(`Receber de ${(f.cliente&&f.cliente.nome)||'cliente'}\nFalta ${fmtBR(falta)}.\n\nValor recebido agora (R$):`,String(falta.toFixed(2)).replace('.',','));
+    if(s===null)return;
+    valor=+String(s).replace(',','.')||0;
+    if(valor<=0)return toast('Valor inválido','error');
+    if(valor>falta+0.01)return toast('Valor maior do que o que falta','error');
+  }
+  if(!Array.isArray(f.pagamentos))f.pagamentos=[];
+  f.pagamentos.push({data:hoje(),valor:Math.round(valor*100)/100,por:CURRENT?fixNome(CURRENT.nome):''});
+  f.pago=Math.round(((f.pago||0)+valor)*100)/100;
+  if(f.pago>=f.valor-0.01){f.quitado=true;f.quitadoEm=hoje();}
+  save();renderFiado();
+  toast(f.quitado?'Fiado quitado ✅':'Pagamento de '+fmtBR(valor)+' registrado ✅','success');
+}
 function salvarTroca(){
   const id=+document.getElementById('tkProd').value;
   const qt=+document.getElementById('tkQt').value;
@@ -4062,13 +4260,14 @@ function renderEquipe(){
       <td>${fmtBR(e.sal)}</td>
       <td>${e.com}%</td>
       <td>${vendMes.length} (${fmtBRk(recVend)})</td>
+      <td>${comissao>0?'<strong style="color:var(--verde)">'+fmtBR(comissao)+'</strong>':'—'}</td>
       <td><strong>${fmtBR(e.sal+comissao)}</strong></td>
       <td>
         <button class="btn btn-ghost btn-sm" onclick="editarMembro(${e.id})">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="excluirMembro(${e.id})">🗑️</button>
       </td>
     </tr>`;
-  }).join('')||'<tr><td colspan="7" class="text-mute" style="text-align:center;padding:20px">Nenhum funcionário cadastrado. Clique em “+ Novo membro”.</td></tr>';
+  }).join('')||'<tr><td colspan="8" class="text-mute" style="text-align:center;padding:20px">Nenhum funcionário cadastrado. Clique em “+ Novo membro”.</td></tr>';
 }
 let editMembroId=null;
 function novoMembro(){
@@ -4168,8 +4367,29 @@ function exportarTudo(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download='lojao-backup-'+hoje()+'.json';a.click();
-  toast('Backup baixado','success');
+  a.href=url;a.download='lojao-backup-'+hoje()+'-'+new Date().toLocaleTimeString('pt-BR').replace(/:/g,'')+'.json';a.click();
+  toast('Backup baixado ✅','success');
+}
+/* Restaura os dados a partir de um arquivo de backup. Antes de sobrescrever,
+   baixa automaticamente um backup do estado atual (rede de segurança). */
+function restaurarBackup(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    let dados;
+    try{dados=JSON.parse(e.target.result);}catch(err){input.value='';return toast('Arquivo inválido — não é um backup do sistema','error');}
+    if(!dados||!Array.isArray(dados.produtos)||!Array.isArray(dados.vendas)){input.value='';return toast('Backup não reconhecido (faltam dados essenciais)','error');}
+    const resumo='• '+dados.produtos.length+' produtos\n• '+dados.vendas.length+' vendas\n• '+((dados.usuarios||[]).length)+' usuários';
+    if(!confirm('RESTAURAR BACKUP\n\nIsto vai SUBSTITUIR todos os dados atuais (deste aparelho e da nuvem) por:\n\n'+resumo+'\n\nUm backup dos dados de AGORA será baixado antes, por segurança.\n\nConfirmar a restauração?')){input.value='';return;}
+    try{exportarTudo();}catch(e){}
+    (dados.produtos||[]).forEach(p=>garanteEstoque(p));
+    S=dados;
+    save();
+    input.value='';
+    toast('Backup restaurado ✅ — sincronizando…','success');
+    setTimeout(()=>location.reload(),1400);
+  };
+  r.readAsText(file);
 }
 
 /* ================================================================
