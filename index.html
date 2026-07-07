@@ -1813,7 +1813,7 @@
    ESTADO + PERSISTÊNCIA
 ================================================================ */
 const STORE_KEY='lojaoEconomia_v4';
-const APP_VERSION='v18 · 19/06/2026';
+const APP_VERSION='v19 · 07/07/2026';
 /* Força baixar a versão mais recente, contornando o cache (funciona no celular) */
 function forcarAtualizacao(){
   try{Object.keys(sessionStorage).filter(k=>k.startsWith('upd_')).forEach(k=>sessionStorage.removeItem(k));}catch(e){}
@@ -1827,6 +1827,9 @@ async function checarAtualizacao(){
     if(!r.ok)return;
     const latest=(await r.text()).trim();
     if(latest && latest!==APP_VERSION){
+      // NÃO recarrega no meio de uma venda/preenchimento — espera ficar livre e tenta de novo
+      const ocupado=(typeof usuarioEditando==='function'&&usuarioEditando())||(typeof carrinho!=='undefined'&&carrinho&&carrinho.length);
+      if(ocupado)return;
       const flag='upd_'+latest;
       if(sessionStorage.getItem(flag))return; // já tentou nesta sessão — evita loop
       sessionStorage.setItem(flag,'1');
@@ -2153,7 +2156,7 @@ function carregarEstado(){
 let S=carregarEstado();
 
 /* ----------- camada de nuvem (Firestore) ----------- */
-let db=null,_cloudReady=false,_cloudHasDoc=false,_applyingRemote=false,_saveTimer=null,_lastJson='',paginaAtual='dashboard',_pendingSave=false,_pendingRemote=null,_alimentarAtivo=false;
+let db=null,_cloudReady=false,_cloudHasDoc=false,_applyingRemote=false,_saveTimer=null,_lastJson='',paginaAtual='dashboard',_pendingSave=false,_pendingRemote=null,_alimentarAtivo=false,_unsub=null,_reconnTimer=null,_conectando=false;
 /* o usuário está preenchendo algo? (não pode redesenhar a tela por cima dele) */
 function usuarioEditando(){
   // Aba "Alimentar Estoque" aberta — sinal explícito, não depende de foco/timing
@@ -2196,11 +2199,39 @@ function save(){
     _pendingSave=true; // temos alteração local não confirmada — protege contra ser sobrescrita
     clearTimeout(_saveTimer);
     _saveTimer=setTimeout(()=>{
-      db.collection('lojao').doc('estado').set({json:_lastJson,ts:Date.now(),por:(typeof CURRENT!=='undefined'&&CURRENT)?CURRENT.nome:''})
-        .then(()=>{_pendingSave=false;})
+      const ref=db.collection('lojao').doc('estado');
+      // TRANSAÇÃO: lê a nuvem e SOMA (vendas/lançamentos de todos os aparelhos nunca se
+      // perdem por gravação simultânea). Substitui o antigo .set() que sobrescrevia tudo.
+      db.runTransaction(async tx=>{
+        const snap=await tx.get(ref);
+        let out=S;
+        if(snap.exists&&snap.data()&&snap.data().json){
+          try{out=mergeForSave(JSON.parse(snap.data().json),S);}catch(e){out=S;}
+        }
+        tx.set(ref,{json:JSON.stringify(out),ts:Date.now(),por:(typeof CURRENT!=='undefined'&&CURRENT)?CURRENT.nome:''});
+      }).then(()=>{_pendingSave=false;})
         .catch(e=>{_pendingSave=false;console.error('Erro ao salvar na nuvem',e);setCloudBadge(false);});
     },300);
   }
+}
+/* Mesclagem para GRAVAR: mantém deste aparelho os cadastros/estoque/edições, mas SOMA
+   (une) todos os registros de "histórico" com o que já está na nuvem — assim nenhuma
+   venda/entrada/lançamento some quando dois aparelhos gravam ao mesmo tempo. */
+function mergeForSave(cloud,local){
+  const m=Object.assign({},local);
+  const uni=(k,keyFn)=>{m[k]=_union(cloud[k],local[k],keyFn);};
+  uni('vendas', v=>v.uid||_k(v,['data','hora','local','total','vendedor']));
+  uni('entradas', e=>e.uid||_k(e,['data','local','prodId','qt','custoUnit']));
+  uni('transferencias', t=>t.uid||_k(t,['data','de','para'])+'|'+(t.itens||[]).map(i=>i.prodId+'x'+i.qt).join(','));
+  uni('trocas', t=>t.uid||_k(t,['data','prodId','qt','tipo','motivo']));
+  uni('despesas', d=>d.uid||_k(d,['data','cat','desc','valor']));
+  uni('abastecimentos', a=>a.uid||_k(a,['data','valor','litros','km']));
+  uni('diario', e=>e.uid||_k(e,['data','cidade','texto']));
+  uni('movCaixa', x=>x.uid||_k(x,['data','local','tipo','valor','motivo','hora']));
+  uni('estornos', x=>x.uid||_k(x,['vendaId','data','hora']));
+  uni('fechamentos', f=>f.uid||_k(f,['data','unidade']));
+  (m.produtos||[]).forEach(p=>garanteEstoque(p));
+  return m;
 }
 function cloudPush(){ // força enviar este aparelho para a nuvem (fonte da verdade)
   if(!db)return toast('Nuvem não configurada','error');
@@ -2248,34 +2279,41 @@ function cloudInit(onReady){
     firebase.initializeApp(firebaseConfig);
     db=firebase.firestore();
     const ref=db.collection('lojao').doc('estado');
-    // sincronização inicial: cria a base se vazia, ou MESCLA (junta os cadastros)
-    db.runTransaction(async tx=>{
-      const snap=await tx.get(ref);
-      if(!snap.exists){ const base=Object.assign({},S,{produtos:stripDemoProdutos(S.produtos)}); tx.set(ref,{json:JSON.stringify(base),ts:Date.now(),por:(CURRENT?CURRENT.nome:'auto')}); }
-      else{ const cloud=JSON.parse(snap.data().json); const merged=mergeStates(cloud,S); tx.set(ref,{json:JSON.stringify(merged),ts:Date.now()}); }
-    }).then(()=>{_cloudHasDoc=true;}).catch(e=>console.error('sync inicial',e)).finally(()=>{
-      ref.onSnapshot(snap=>{
-        _cloudReady=true;setCloudBadge(true);
-        if(snap.exists&&snap.data()&&snap.data().json){
-          _cloudHasDoc=true;
-          const json=snap.data().json;
-          // NÃO sobrescreve se há alteração local ainda sendo salva (evita perder o que a pessoa acabou de lançar)
-          if(json!==_lastJson && !_pendingSave){
-            // SEMPRE atualiza os dados na memória — assim não perdemos vendas/lançamentos
-            // que outros aparelhos fizeram enquanto esta pessoa preenche algo.
-            aplicarRemoto(json);
-            // MAS não redesenha a tela por cima de quem está digitando: o que ela já digitou
-            // fica no formulário (DOM) e o redesenho é adiado até ela terminar.
-            if(usuarioEditando())_pendingRemote=true; else rerenderAtual();
-          }
-        }
-        pronto(true);
-      },err=>{console.error('Firestore',err);setCloudBadge(false);pronto(false);});
-      // redesenha quando a pessoa parar de editar (sai do formulário / fica ociosa).
-      // Os dados já estão atualizados; aqui só atualizamos o que aparece na tela.
-      setInterval(()=>{ if(_pendingRemote&&!usuarioEditando()){_pendingRemote=false;rerenderAtual();} },1500);
-    });
+    sincronizarNuvem(ref,pronto);
+    // redesenha quando a pessoa parar de editar (sai do formulário / fica ociosa).
+    setInterval(()=>{ if(_pendingRemote&&!usuarioEditando()){_pendingRemote=false;rerenderAtual();} },1500);
   }catch(e){console.error(e);setCloudBadge(false);pronto(false);}
+}
+/* Conecta à nuvem: (1) SOMA o que este aparelho tem com o que está na nuvem (recupera o
+   que foi lançado offline), depois (2) escuta em tempo real. Se a conexão cair (nuvem fora,
+   regra mudou, internet oscilou), AGENDA RECONEXÃO automática — o sistema volta sozinho. */
+function sincronizarNuvem(ref,pronto){
+  if(_conectando)return; _conectando=true;
+  db.runTransaction(async tx=>{
+    const snap=await tx.get(ref);
+    if(!snap.exists){ const base=Object.assign({},S,{produtos:stripDemoProdutos(S.produtos)}); tx.set(ref,{json:JSON.stringify(base),ts:Date.now(),por:(CURRENT?CURRENT.nome:'auto')}); }
+    else{ const cloud=JSON.parse(snap.data().json); const merged=mergeStates(cloud,S); tx.set(ref,{json:JSON.stringify(merged),ts:Date.now()}); }
+  }).then(()=>{_cloudHasDoc=true;}).catch(e=>console.error('sync inicial',e)).finally(()=>{
+    _conectando=false;
+    if(_unsub){try{_unsub();}catch(e){}_unsub=null;}
+    _unsub=ref.onSnapshot(snap=>{
+      _cloudReady=true;setCloudBadge(true);
+      if(snap.exists&&snap.data()&&snap.data().json){
+        _cloudHasDoc=true;
+        const json=snap.data().json;
+        if(json!==_lastJson && !_pendingSave){
+          aplicarRemoto(json);
+          if(usuarioEditando())_pendingRemote=true; else rerenderAtual();
+        }
+      }
+      if(pronto)pronto(true);
+    },err=>{
+      console.error('Firestore',err);_cloudReady=false;setCloudBadge(false);if(pronto)pronto(false);
+      // volta a tentar sozinho a cada 15s (quando a nuvem normalizar, sobe o que ficou offline)
+      clearTimeout(_reconnTimer);
+      _reconnTimer=setTimeout(()=>sincronizarNuvem(ref,null),15000);
+    });
+  });
 }
 /* normaliza estrutura (garante campos novos em dados migrados de versões antigas) */
 (function normaliza(){
@@ -2877,6 +2915,7 @@ function finalizarVenda(){
   const now=new Date();
   const venda={
     id:Math.max(0,...S.vendas.map(v=>v.id||0),0)+1,
+    uid:'v'+now.getTime()+'-'+Math.floor(Math.random()*1000000),
     data:hoje(),
     hora:`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
     local:localPdv,
@@ -4483,6 +4522,9 @@ function iniciarApp(){
 setCloudBadge(false);
 try{document.getElementById('loginVersao').textContent='Versão '+APP_VERSION;}catch(e){}
 checarAtualizacao();
+// checa a versão de tempos em tempos e se atualiza sozinho (permite empurrar correções
+// a todos os aparelhos sem visitar loja) — só recarrega quando o caixa não está no meio de uma venda
+setInterval(checarAtualizacao,120000);
 cloudInit(()=>{ iniciarApp(); });
 </script>
 
