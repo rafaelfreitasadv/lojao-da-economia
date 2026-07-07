@@ -762,6 +762,7 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="icon-btn" title="Enviar minhas vendas para o sistema" onclick="mostrarAvisoSync()" style="font-size:16px">📤</button>
         <button class="icon-btn" title="Notificações">🔔<span class="dot"></span></button>
         <button class="icon-btn" id="cloudBadge" title="Modo local" onclick="goPage('config')">💾</button>
       </div>
@@ -1617,6 +1618,26 @@
 
 <!-- ====================== MODAIS ====================== -->
 
+<div class="modal-bg" id="modalSync">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3>📤 Enviar suas vendas para o sistema</h3><button class="close-x" onclick="closeModal('modalSync')">×</button></div>
+    <div class="modal-body">
+      <div id="syncStatusLinha"></div>
+      <div style="background:#F4F6FB;border:1px solid var(--cinza-borda);border-radius:12px;padding:16px;margin:14px 0">
+        <div style="font-weight:800;margin-bottom:10px;font-size:14px">👉 Como enviar — passo a passo:</div>
+        <div style="font-size:14px;line-height:2">
+          <strong>1º</strong> — Veja se tem <strong>☁️</strong> lá em cima, no canto direito (quer dizer que está conectado).<br>
+          <strong>2º</strong> — Clique no botão azul grande <strong>aqui embaixo</strong>.<br>
+          <strong>3º</strong> — Espere aparecer a <strong>mensagem verde</strong> de "enviado". Pronto!
+        </div>
+      </div>
+      <button id="btnEnviarSync" class="btn btn-primary" style="width:100%;justify-content:center;padding:15px;font-size:16px;font-weight:700" onclick="enviarParaSistema()">📤 ENVIAR MINHAS VENDAS AGORA</button>
+      <div id="syncResultado" style="margin-top:14px"></div>
+      <div class="text-mute" style="font-size:11.5px;margin-top:12px;text-align:center">Suas vendas ficam sempre salvas neste aparelho. Este botão garante que elas subam para o sistema (aparecem para a gestão e nas outras lojas).</div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modalNovoProduto">
   <div class="modal">
     <div class="modal-head"><h3>Novo Produto</h3><button class="close-x" onclick="closeModal('modalNovoProduto')">×</button></div>
@@ -2241,6 +2262,45 @@ function cloudPush(){ // força enviar este aparelho para a nuvem (fonte da verd
     .then(()=>{_cloudHasDoc=true;toast('Dados deste aparelho enviados para a nuvem ✅','success');setCloudBadge(true);if(document.getElementById('demoResumo'))renderConfig();})
     .catch(e=>toast('Falha ao enviar: '+e.message,'error'));
 }
+/* Abre o aviso guiado de envio (aparece no login e pelo botão 📤 da barra de cima) */
+function mostrarAvisoSync(){
+  const linha=document.getElementById('syncStatusLinha');if(!linha)return;
+  const nVendas=(S.vendas||[]).length;
+  if(!CLOUD_ENABLED){ linha.innerHTML='<div class="alert-box"><span>💾</span><div>Este aparelho está em modo local.</div></div>'; }
+  else if(_cloudReady){ linha.innerHTML='<div class="alert-box success"><span>☁️</span><div><strong>Conectado ao sistema.</strong> Este aparelho tem <strong>'+nVendas+' vendas</strong>. Clique no botão abaixo para garantir que todas subiram.</div></div>'; }
+  else{ linha.innerHTML='<div class="alert-box" style="border-color:var(--amarelo)"><span>⚠️</span><div><strong>Ainda conectando / sem internet.</strong> Suas <strong>'+nVendas+' vendas</strong> estão salvas aqui. Confira a internet e clique no botão abaixo.</div></div>'; }
+  const r=document.getElementById('syncResultado');if(r)r.innerHTML='';
+  const btn=document.getElementById('btnEnviarSync');if(btn){btn.disabled=false;btn.textContent='📤 ENVIAR MINHAS VENDAS AGORA';}
+  document.getElementById('modalSync').classList.add('show');
+}
+/* Envia (SOMA) o que este aparelho tem para a nuvem — transação segura, nunca apaga.
+   Usado no aviso guiado; recupera as vendas lançadas offline. */
+function enviarParaSistema(){
+  if(!CLOUD_ENABLED||!db)return toast('Nuvem não configurada neste aparelho','error');
+  const btn=document.getElementById('btnEnviarSync');
+  const r=document.getElementById('syncResultado');
+  if(btn){btn.disabled=true;btn.textContent='Enviando…';}
+  if(r)r.innerHTML='<div class="text-mute" style="font-size:13px">Enviando suas vendas…</div>';
+  const ref=db.collection('lojao').doc('estado');
+  db.runTransaction(async tx=>{
+    const snap=await tx.get(ref);
+    let merged;
+    if(snap.exists&&snap.data()&&snap.data().json){ merged=mergeStates(JSON.parse(snap.data().json),S); }
+    else{ merged=Object.assign({},S,{produtos:stripDemoProdutos(S.produtos)}); }
+    const js=JSON.stringify(merged);
+    tx.set(ref,{json:js,ts:Date.now(),por:(CURRENT?CURRENT.nome:'')});
+    return merged;
+  }).then(merged=>{
+    _cloudHasDoc=true;_cloudReady=true;setCloudBadge(true);
+    const totalNuvem=(merged.vendas||[]).length;
+    if(r)r.innerHTML='<div class="alert-box success"><span>✅</span><div><strong>Pronto! Suas vendas foram enviadas ao sistema.</strong><br>Agora o sistema tem <strong>'+totalNuvem+' vendas</strong> no total. Pode fechar este aviso.</div></div>';
+    if(btn){btn.disabled=false;btn.textContent='📤 Enviar novamente';}
+  }).catch(e=>{
+    console.error('enviarParaSistema',e);setCloudBadge(false);
+    if(r)r.innerHTML='<div class="alert-box" style="border-color:var(--vermelho)"><span>⚠️</span><div><strong>Não consegui enviar agora.</strong><br>Confira a internet e clique de novo. Suas vendas continuam salvas neste aparelho — nada foi perdido.</div></div>';
+    if(btn){btn.disabled=false;btn.textContent='📤 Tentar de novo';}
+  });
+}
 /* ---- mesclagem aditiva de estados (nunca apaga, só junta) ---- */
 function _union(cloudArr,localArr,keyFn){
   const out=(cloudArr||[]).slice();
@@ -2448,6 +2508,9 @@ function bootUser(){
   // página inicial conforme perfil
   const inicial=(CURRENT.role==='caixa')?'pdv':'dashboard';
   goPage(inicial);
+  // AVISO GUIADO DE ENVIO: aparece sozinho ao entrar, orientando a subir as vendas.
+  // (espera ~2s pra dar tempo de conectar na nuvem e mostrar o status certo)
+  if(CLOUD_ENABLED)setTimeout(mostrarAvisoSync,2000);
 }
 
 /* ================================================================
